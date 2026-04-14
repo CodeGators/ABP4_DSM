@@ -6,7 +6,7 @@
 ---
 
 ## 🐊 Equipe CodeGators
-* Anderson
+* Anderson Fontes
 * Arthur Augusto
 * Gustavo Silva
 * Rafael Shinji
