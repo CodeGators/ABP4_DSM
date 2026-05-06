@@ -36,6 +36,8 @@
     // Recommended Options
     "strict": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
@@ -43,5 +45,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["src","tests", "jest.config.ts"] 
+  "include": ["src","tests"] 
 }
