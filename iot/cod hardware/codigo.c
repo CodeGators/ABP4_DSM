@@ -1,38 +1,61 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
 #include <Servo.h>
-#include <Adafruit_LiquidCrystal.h>
 
-Adafruit_LiquidCrystal lcd(0); 
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-Servo servo1, servo2, servo3;
-const int leds[] = {7, 6, 5}; 
+// --- VETORES DE COMPONENTES (Agora para 3 Gavetas) ---
+Servo servosGaveta[3];
+const int pinosLed[3]   = {7, 6, 5};     // LEDs das gavetas 1, 2 e 3
+const int pinosServo[3] = {9, 10, 11};   // Servos das gavetas 1, 2 e 3
+const int pinosTrig[3]  = {22, 24, 26};  // Trigs dos sensores 1, 2 e 3
+const int pinosEcho[3]  = {23, 25, 27};  // Echos dos sensores 1, 2 e 3
+
 const int pinoBuzzer = 8;
-const int sensores[] = {2, 3, 4}; // Pinos dos botões (Gavetas 1, 2 e 3)
+const int limiteAbertura = 10; 
+
+// --- TEMPOS DE CONFIGURAÇÃO ---
+const int tempoParaTrancar = 5000; // 5 segundos de delay para trancar
 
 void setup() {
-  lcd.begin(16, 2);
-  lcd.setBacklight(1); 
+  Serial.begin(9600);
+  
+  lcd.init();
+  lcd.backlight();
+  
+  pinMode(pinoBuzzer, OUTPUT);
+  digitalWrite(pinoBuzzer, LOW);
+  noTone(pinoBuzzer);
+
+  // O loop agora vai até 3 para configurar todas as gavetas
+  for (int i = 0; i < 3; i++) {
+    pinMode(pinosLed[i], OUTPUT);
+    pinMode(pinosTrig[i], OUTPUT);
+    pinMode(pinosEcho[i], INPUT);
+    
+    servosGaveta[i].attach(pinosServo[i]);
+    servosGaveta[i].write(0); 
+  }
   
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("PillGator V1.0");
+  lcd.print("PillGator V3.0"); 
   lcd.setCursor(0, 1);
-  lcd.print("Iniciando...");
+  lcd.print("3 Gavetas Ativas");
   delay(2000);
+}
 
-  servo1.attach(9);
-  servo2.attach(10);
-  servo3.attach(11);
+long medirDistancia(int indice) {
+  digitalWrite(pinosTrig[indice], LOW);
+  delayMicroseconds(5); 
+  digitalWrite(pinosTrig[indice], HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinosTrig[indice], LOW);
   
-  servo1.write(0);
-  servo2.write(0);
-  servo3.write(0);
-
-  for(int i=0; i<3; i++) {
-    pinMode(leds[i], OUTPUT);
-    // INPUT_PULLUP usa o resistor interno, o botão envia LOW quando clicado
-    pinMode(sensores[i], INPUT_PULLUP); 
-  }
-  pinMode(pinoBuzzer, OUTPUT);
+  long duracao = pulseIn(pinosEcho[indice], HIGH, 30000); 
+  
+  if (duracao == 0) return 999; 
+  return duracao * 0.034 / 2; 
 }
 
 void atualizarVisor(String linha1, String linha2) {
@@ -44,80 +67,96 @@ void atualizarVisor(String linha1, String linha2) {
 }
 
 void tocarAvisoAgradavel() {
-  for (int i = 0; i < 2; i++) {
-    tone(pinoBuzzer, 523); 
-    delay(150);
-    tone(pinoBuzzer, 659); 
-    delay(150);
-    tone(pinoBuzzer, 784); 
-    delay(300);             
-    noTone(pinoBuzzer);     
-    delay(1400);            
+  tone(pinoBuzzer, 1000); delay(200);
+  noTone(pinoBuzzer);     delay(100);
+  tone(pinoBuzzer, 1500); delay(300);
+  noTone(pinoBuzzer);
+}
+
+void tocarAlertaDosePerdida(int indice) {
+  for(int i = 0; i < 6; i++) {
+    digitalWrite(pinosLed[indice], HIGH);
+    tone(pinoBuzzer, 250); delay(200);
+    digitalWrite(pinosLed[indice], LOW);
+    noTone(pinoBuzzer);    delay(200);
   }
 }
 
-void tocarAlertaErro() {
-  for(int i=0; i<3; i++) {
-    tone(pinoBuzzer, 250); 
-    delay(300);
-    noTone(pinoBuzzer);
-    delay(100);
-  }
-}
+void liberarRemedio(int indice, String nome) {
+  int numGaveta = indice + 1;
+  
+  atualizarVisor("AGORA: " + nome, "Puxe a Gaveta " + String(numGaveta));
+  digitalWrite(pinosLed[indice], HIGH);
 
-void liberarRemedio(int gaveta, String nome, String hora) {
-  atualizarVisor("AGORA: " + nome, "Abra a gaveta!");
-  digitalWrite(leds[gaveta-1], HIGH);
-
-  // Destranca a gaveta
-  if(gaveta == 1) servo1.write(90);
-  else if(gaveta == 2) servo2.write(90);
-  else if(gaveta == 3) servo3.write(90);
-
+  servosGaveta[indice].write(90);
   tocarAvisoAgradavel(); 
 
-  bool gavetaAberta = false;
+  bool gavetaFoiAberta = false;
   
-  // Loop de espera: 10 segundos para clicar no botão no Tinkercad
-  for(int i = 0; i < 100; i++) { 
-    if(digitalRead(sensores[gaveta-1]) == LOW) { 
-      gavetaAberta = true;
+  for(int i = 0; i < 150; i++) { 
+    long distanciaAtual = medirDistancia(indice);
+    if(distanciaAtual > limiteAbertura) { 
+      gavetaFoiAberta = true;
       break; 
     }
     delay(100); 
   }
 
-  // Verifica se o paciente tirou o remédio ou ignorou
-  if(gavetaAberta) {
-    atualizarVisor("Remedio retirado", "Fechando...");
-    delay(3000); 
+  if(gavetaFoiAberta) {
+    atualizarVisor("Remedio retirado", "Feche a Gaveta " + String(numGaveta));
+    bool gavetaFoiFechada = false;
+    
+    for(int i = 0; i < 150; i++) { 
+      long distanciaAtual = medirDistancia(indice);
+      if(distanciaAtual > 0 && distanciaAtual <= limiteAbertura) {
+        gavetaFoiFechada = true;
+        break;
+      }
+      delay(100);
+    }
+
+    if(!gavetaFoiFechada) {
+      atualizarVisor("ALERTA CRITICO!", "Gaveta " + String(numGaveta) + " Aberta!");
+      while(medirDistancia(indice) > limiteAbertura) {
+        tone(pinoBuzzer, 800); delay(300);
+        noTone(pinoBuzzer);    delay(300);
+      }
+    }
+    
+    atualizarVisor("Gaveta Fechada", "Trancando em 5s.");
+    delay(tempoParaTrancar); 
+
   } else {
-    atualizarVisor("ALERTA: Ignorado", "Remedio na caixa");
-    tocarAlertaErro();
-    delay(3000);
+    atualizarVisor("ALERTA CRITICO", "DOSE PERDIDA!");
+    Serial.println("[AVISO] Dose ignorada na Gaveta " + String(numGaveta));
+    tocarAlertaDosePerdida(indice);
+    delay(2000);
   }
 
-  // Tranca a gaveta
-  if(gaveta == 1) servo1.write(0);
-  else if(gaveta == 2) servo2.write(0);
-  else if(gaveta == 3) servo3.write(0);
-
-  digitalWrite(leds[gaveta-1], LOW);
+  // Tranca novamente
+  servosGaveta[indice].write(0);
+  digitalWrite(pinosLed[indice], LOW);
+  
+  atualizarVisor("Gaveta " + String(numGaveta), "Trancada e Segura");
+  delay(2000);
 }
 
 void loop() {
-  // GAVETA 1
-  atualizarVisor("Prox: Remedio A", "Horario: 08:00");
+  // Ciclo da Gaveta 1
+  atualizarVisor("Prox: Remedio A", "Aguardando...");
+  delay(4000); 
+  liberarRemedio(0, "Remedio A");
+  
+  // Ciclo da Gaveta 2
+  atualizarVisor("Prox: Remedio B", "Aguardando...");
+  delay(4000); 
+  liberarRemedio(1, "Remedio B");
+
+  // Ciclo da Gaveta 3
+  atualizarVisor("Prox: Remedio C", "Aguardando...");
+  delay(4000); 
+  liberarRemedio(2, "Remedio C");
+  
+  atualizarVisor("Sistema em", "Standby...");
   delay(5000); 
-  liberarRemedio(1, "Remedio A", "08:00");
-
-  // GAVETA 2
-  atualizarVisor("Prox: Remedio B", "Horario: 14:00");
-  delay(5000);
-  liberarRemedio(2, "Remedio B", "14:00");
-
-  // GAVETA 3
-  atualizarVisor("Prox: Remedio C", "Horario: 20:00");
-  delay(5000);
-  liberarRemedio(3, "Remedio C", "20:00");
 }
