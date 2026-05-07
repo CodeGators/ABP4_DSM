@@ -138,7 +138,31 @@ Tarefas:
 - [ ] Ajustar navegacao por abas.
 - [ ] Abrir PR para `develop`.
 
-## 6. Qualidade e CI/CD
+## 6. Base Publica de Medicamentos e Bulas
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/base-medicamentos-anvisa
+```
+
+Tarefas:
+
+- [ ] Pesquisar fonte oficial de CSV/dados abertos da Anvisa para medicamentos.
+- [ ] Criar rotina de importacao periodica do CSV da Anvisa.
+- [ ] Salvar medicamentos de referencia no banco.
+- [ ] Modelar campos como registro, principio ativo, nome comercial, empresa e apresentacao.
+- [ ] Criar endpoint `GET /base-medicamentos?busca=dipirona`.
+- [ ] Criar endpoint `GET /base-medicamentos/:registro`.
+- [ ] Criar endpoint `GET /base-medicamentos/:registro/bula`.
+- [ ] No mobile, permitir buscar medicamento na base antes de adicionar ao tratamento.
+- [ ] Criar testes de importacao e consulta.
+
+Observacao: esta base deve ajudar o cadastro, mas nao substitui o medicamento do paciente. O medicamento cadastrado no tratamento continua sendo uma entidade propria do PillGator.
+
+## 7. Qualidade e CI/CD
 
 Tarefas:
 
@@ -156,5 +180,6 @@ Tarefas:
 4. Agendamentos.
 5. Eventos/historico.
 6. Mobile consumindo a API.
-7. Autenticacao.
-8. Ajustes finais de CI/CD e documentacao.
+7. Base publica de medicamentos e bulas.
+8. Autenticacao.
+9. Ajustes finais de CI/CD e documentacao.

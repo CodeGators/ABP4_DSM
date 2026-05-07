@@ -1,24 +1,38 @@
 import cors from 'cors';
 import express from 'express';
 
-const app = express();
+import { tratarErros } from './middlewares/tratarErros.js';
+import { criarMedicamentosRotas } from './modulos/medicamentos/medicamentosRotas.js';
+import type { MedicamentosServicoContrato } from './modulos/medicamentos/medicamentosTipos.js';
 
-app.use(cors());
-app.use(express.json());
+type CriarAppOpcoes = {
+  medicamentosServico?: MedicamentosServicoContrato;
+};
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+export function criarApp(opcoes: CriarAppOpcoes = {}) {
+  const app = express();
 
-app.get('/saude', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+  app.use(cors());
+  app.use(express.json());
 
-app.get('/medicamentos', (_req, res) => {
-  res.status(200).json([
-    { id: 1, nome: 'Losartana', dosagem: '50mg', horario: '08:00' },
-    { id: 2, nome: 'Metformina', dosagem: '850mg', horario: '12:00' }
-  ]);
-});
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/saude', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
+  app.use(
+    '/medicamentos',
+    criarMedicamentosRotas(opcoes.medicamentosServico)
+  );
+
+  app.use(tratarErros);
+
+  return app;
+}
+
+const app = criarApp();
 
 export default app;
