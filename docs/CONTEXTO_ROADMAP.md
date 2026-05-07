@@ -449,6 +449,7 @@ Acao:
 - Melhorar cobertura de testes.
 - Adicionar lint/test/build tambem no mobile.
 - Revisar Docker e variaveis de ambiente.
+- Configurar Swagger/OpenAPI para testar as rotas em ambiente local.
 - Documentar como rodar localmente.
 - Garantir CI verde em PR para `develop`.
 - Garantir CD backend somente em merge para `main`.

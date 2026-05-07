@@ -186,7 +186,27 @@ Tarefas:
 
 Observacao: esta base deve ajudar o cadastro, mas nao substitui o medicamento do paciente. O medicamento cadastrado no tratamento continua sendo uma entidade propria do PillGator.
 
-## 8. Qualidade e CI/CD
+## 8. Documentacao Interativa da API com Swagger
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/swagger-api
+```
+
+Tarefas:
+
+- [ ] Instalar e configurar Swagger/OpenAPI no backend.
+- [ ] Expor a documentacao em `GET /docs`.
+- [ ] Expor o JSON OpenAPI em `GET /docs.json`.
+- [ ] Documentar rotas de saude, medicamentos e agendamentos.
+- [ ] Documentar exemplos de payload e respostas de erro.
+- [ ] Garantir que seja possivel testar as rotas pelo Swagger UI.
+- [ ] Criar teste simples garantindo que `/docs.json` responde.
+
+## 9. Qualidade e CI/CD
 
 Tarefas:
 
@@ -205,6 +225,7 @@ Tarefas:
 5. Eventos/historico.
 6. Restricoes e interacoes entre medicamentos.
 7. Mobile consumindo a API.
-8. Base publica de medicamentos e bulas.
-9. Autenticacao.
-10. Ajustes finais de CI/CD e documentacao.
+8. Swagger/OpenAPI para testar rotas.
+9. Base publica de medicamentos e bulas.
+10. Autenticacao.
+11. Ajustes finais de CI/CD e documentacao.
