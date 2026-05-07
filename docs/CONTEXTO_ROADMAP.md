@@ -445,6 +445,17 @@ Acao:
 - Garantir CI verde em PR para `develop`.
 - Garantir CD backend somente em merge para `main`.
 
+### Fase 7 - Base Publica de Medicamentos e Bulas
+
+- Pesquisar e validar CSV/dados abertos oficiais da Anvisa.
+- Criar importacao periodica para carregar a base no banco.
+- Criar endpoints proprios para consulta:
+  - `GET /base-medicamentos?busca=dipirona`
+  - `GET /base-medicamentos/:registro`
+  - `GET /base-medicamentos/:registro/bula`
+- Permitir que o mobile consulte a base antes de cadastrar um medicamento no tratamento do paciente.
+- Manter a base publica separada dos medicamentos cadastrados para cada paciente.
+
 ## Lista Inicial de Tarefas
 
 ### Tarefa 1 - Preparar fluxo Git
