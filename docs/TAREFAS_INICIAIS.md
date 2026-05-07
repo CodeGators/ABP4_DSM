@@ -93,6 +93,9 @@ Tarefas:
 - [ ] Criar CRUD de agendamentos.
 - [ ] Vincular agendamentos a medicamentos.
 - [ ] Validar horarios e dias da semana.
+- [ ] Suportar agendamentos por horarios fixos.
+- [ ] Suportar agendamentos por intervalo, como de 8 em 8 horas.
+- [ ] Permitir inicio/fim do tratamento e tolerancia de retirada.
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
@@ -116,7 +119,28 @@ Tarefas:
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
-## 5. Base do Mobile
+## 5. Restricoes e Interacoes entre Medicamentos
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/restricoes-medicamentos
+```
+
+Tarefas:
+
+- [ ] Modelar restricoes entre medicamentos do mesmo paciente.
+- [ ] Permitir registrar que dois medicamentos nao devem ser tomados juntos.
+- [ ] Permitir configurar intervalo minimo entre medicamentos conflitantes.
+- [ ] Alertar ao criar ou alterar agendamento com conflito.
+- [ ] Criar testes para conflitos simples.
+- [ ] Avaliar integracao futura com base publica de medicamentos/bulas.
+
+Observacao: esta tarefa nao substitui orientacao medica. O sistema deve alertar sobre restricoes cadastradas e, futuramente, restricoes vindas de fonte confiavel.
+
+## 6. Base do Mobile
 
 Branch sugerida:
 
@@ -138,7 +162,7 @@ Tarefas:
 - [ ] Ajustar navegacao por abas.
 - [ ] Abrir PR para `develop`.
 
-## 6. Base Publica de Medicamentos e Bulas
+## 7. Base Publica de Medicamentos e Bulas
 
 Branch sugerida:
 
@@ -162,7 +186,7 @@ Tarefas:
 
 Observacao: esta base deve ajudar o cadastro, mas nao substitui o medicamento do paciente. O medicamento cadastrado no tratamento continua sendo uma entidade propria do PillGator.
 
-## 7. Qualidade e CI/CD
+## 8. Qualidade e CI/CD
 
 Tarefas:
 
@@ -179,7 +203,8 @@ Tarefas:
 3. CRUD de medicamentos.
 4. Agendamentos.
 5. Eventos/historico.
-6. Mobile consumindo a API.
-7. Base publica de medicamentos e bulas.
-8. Autenticacao.
-9. Ajustes finais de CI/CD e documentacao.
+6. Restricoes e interacoes entre medicamentos.
+7. Mobile consumindo a API.
+8. Base publica de medicamentos e bulas.
+9. Autenticacao.
+10. Ajustes finais de CI/CD e documentacao.

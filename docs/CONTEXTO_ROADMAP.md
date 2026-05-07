@@ -417,6 +417,14 @@ Acao:
 - Registrar eventos manuais pelo mobile.
 - Preparar contratos para futura integracao IoT.
 
+### Fase 3.5 - Restricoes e Interacoes
+
+- Modelar restricoes entre medicamentos do mesmo paciente.
+- Permitir cadastrar medicamentos que nao podem ser tomados juntos.
+- Permitir intervalo minimo entre medicamentos conflitantes.
+- Bloquear ou alertar ao criar agendamentos conflitantes.
+- Manter esta regra separada do agendamento simples, porque depende de contexto clinico e fonte confiavel.
+
 ### Fase 4 - Mobile Base
 
 - Criar cliente Axios centralizado.
