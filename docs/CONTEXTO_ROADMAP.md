@@ -410,6 +410,14 @@ Acao:
 - Criar testes de services e rotas.
 - Remover dados mockados de `/medicamentos`.
 
+### Fase 2.5 - Banco Local
+
+- Criar `backend/.env.example`.
+- Subir PostgreSQL local pelo Docker Compose.
+- Rodar migrations do TypeORM.
+- Validar tabelas e conexao real do backend.
+- Documentar comandos de banco no README.
+
 ### Fase 3 - Eventos e Historico
 
 - Criar registro de eventos de medicamento.

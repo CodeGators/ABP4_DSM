@@ -99,7 +99,29 @@ Tarefas:
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
-## 4. Eventos e Historico
+## 4. Configurar e Validar Banco Local
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/configuracao-banco-local
+```
+
+Tarefas:
+
+- [ ] Criar `backend/.env.example` com `PORT` e `DATABASE_URL`.
+- [ ] Revisar `docker-compose.yml` para Postgres e backend.
+- [ ] Subir Postgres local com `docker compose up -d postgres`.
+- [ ] Rodar migrations do TypeORM no banco local.
+- [ ] Validar tabelas `medicamentos` e `agendamentos_medicamentos`.
+- [ ] Subir backend conectado ao banco real.
+- [ ] Testar manualmente rotas principais usando banco local.
+- [ ] Documentar comandos no README.
+- [ ] Garantir que dados sensiveis continuem fora do Git.
+
+## 5. Eventos e Historico
 
 Branch sugerida:
 
@@ -119,7 +141,7 @@ Tarefas:
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
-## 5. Restricoes e Interacoes entre Medicamentos
+## 6. Restricoes e Interacoes entre Medicamentos
 
 Branch sugerida:
 
@@ -140,7 +162,7 @@ Tarefas:
 
 Observacao: esta tarefa nao substitui orientacao medica. O sistema deve alertar sobre restricoes cadastradas e, futuramente, restricoes vindas de fonte confiavel.
 
-## 6. Base do Mobile
+## 7. Base do Mobile
 
 Branch sugerida:
 
@@ -162,7 +184,7 @@ Tarefas:
 - [ ] Ajustar navegacao por abas.
 - [ ] Abrir PR para `develop`.
 
-## 7. Base Publica de Medicamentos e Bulas
+## 8. Base Publica de Medicamentos e Bulas
 
 Branch sugerida:
 
@@ -186,7 +208,7 @@ Tarefas:
 
 Observacao: esta base deve ajudar o cadastro, mas nao substitui o medicamento do paciente. O medicamento cadastrado no tratamento continua sendo uma entidade propria do PillGator.
 
-## 8. Documentacao Interativa da API com Swagger
+## 9. Documentacao Interativa da API com Swagger
 
 Branch sugerida:
 
@@ -206,7 +228,7 @@ Tarefas:
 - [ ] Garantir que seja possivel testar as rotas pelo Swagger UI.
 - [ ] Criar teste simples garantindo que `/docs.json` responde.
 
-## 9. Qualidade e CI/CD
+## 10. Qualidade e CI/CD
 
 Tarefas:
 
@@ -222,10 +244,11 @@ Tarefas:
 2. TypeORM/PostgreSQL.
 3. CRUD de medicamentos.
 4. Agendamentos.
-5. Eventos/historico.
-6. Restricoes e interacoes entre medicamentos.
-7. Mobile consumindo a API.
-8. Swagger/OpenAPI para testar rotas.
-9. Base publica de medicamentos e bulas.
-10. Autenticacao.
-11. Ajustes finais de CI/CD e documentacao.
+5. Configurar e validar banco local.
+6. Eventos/historico.
+7. Restricoes e interacoes entre medicamentos.
+8. Mobile consumindo a API.
+9. Swagger/OpenAPI para testar rotas.
+10. Base publica de medicamentos e bulas.
+11. Autenticacao.
+12. Ajustes finais de CI/CD e documentacao.
