@@ -74,7 +74,84 @@ O sistema registra cada abertura e, caso o paciente esqueça de retirar o reméd
 
 ## 🚀 Como Executar
 
-> ⚠️ *Esta seção será atualizada ao longo das Sprints conforme o ambiente for configurado.*
+### Pre-requisitos
+
+- Node.js 20
+- npm
+- Docker e Docker Compose
+
+### Backend com PostgreSQL local
+
+1. Instale as dependencias do backend:
+
+```bash
+cd backend
+npm install
+```
+
+2. Crie o arquivo de ambiente:
+
+```bash
+cp .env.example .env
+```
+
+3. Suba o PostgreSQL:
+
+```bash
+cd ..
+docker compose up -d postgres
+```
+
+4. Rode as migrations:
+
+```bash
+cd backend
+npm run migration:run
+```
+
+5. Inicie a API:
+
+```bash
+npm run dev
+```
+
+A API ficara disponivel em:
+
+```text
+http://localhost:3000
+```
+
+Rotas de saude:
+
+```text
+GET http://localhost:3000/health
+GET http://localhost:3000/saude
+```
+
+### Comandos uteis do backend
+
+```bash
+npm run lint
+npm test
+npm run build
+npm run migration:run
+npm run migration:revert
+```
+
+### Banco de dados
+
+Configuracao local padrao:
+
+```text
+POSTGRES_DB=abp4
+POSTGRES_USER=abp4user
+POSTGRES_PASSWORD=abp4pass
+DATABASE_URL=postgresql://abp4user:abp4pass@localhost:5432/abp4
+```
+
+As credenciais acima sao apenas para desenvolvimento local. Arquivos `.env` reais nao devem ser commitados.
+
+Se o comando `docker compose` nao estiver disponivel, instale o Docker antes de rodar as migrations. Sem o PostgreSQL ativo, o backend nao conseguira iniciar porque ele valida a conexao com o banco na subida.
 
 ---
 
