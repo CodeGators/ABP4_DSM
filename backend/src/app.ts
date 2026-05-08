@@ -2,10 +2,13 @@ import cors from 'cors';
 import express from 'express';
 
 import { tratarErros } from './middlewares/tratarErros.js';
+import { criarAgendamentosRotas } from './modulos/agendamentos/agendamentosRotas.js';
+import type { AgendamentosServicoContrato } from './modulos/agendamentos/agendamentosTipos.js';
 import { criarMedicamentosRotas } from './modulos/medicamentos/medicamentosRotas.js';
 import type { MedicamentosServicoContrato } from './modulos/medicamentos/medicamentosTipos.js';
 
 type CriarAppOpcoes = {
+  agendamentosServico?: AgendamentosServicoContrato;
   medicamentosServico?: MedicamentosServicoContrato;
 };
 
@@ -26,6 +29,10 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
   app.use(
     '/medicamentos',
     criarMedicamentosRotas(opcoes.medicamentosServico)
+  );
+  app.use(
+    '/agendamentos',
+    criarAgendamentosRotas(opcoes.agendamentosServico)
   );
 
   app.use(tratarErros);

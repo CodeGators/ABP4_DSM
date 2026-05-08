@@ -410,12 +410,28 @@ Acao:
 - Criar testes de services e rotas.
 - Remover dados mockados de `/medicamentos`.
 
+### Fase 2.5 - Banco Local
+
+- Criar `backend/.env.example`.
+- Subir PostgreSQL local pelo Docker Compose.
+- Rodar migrations do TypeORM.
+- Validar tabelas e conexao real do backend.
+- Documentar comandos de banco no README.
+
 ### Fase 3 - Eventos e Historico
 
 - Criar registro de eventos de medicamento.
 - Listar historico por paciente e medicamento.
 - Registrar eventos manuais pelo mobile.
 - Preparar contratos para futura integracao IoT.
+
+### Fase 3.5 - Restricoes e Interacoes
+
+- Modelar restricoes entre medicamentos do mesmo paciente.
+- Permitir cadastrar medicamentos que nao podem ser tomados juntos.
+- Permitir intervalo minimo entre medicamentos conflitantes.
+- Bloquear ou alertar ao criar agendamentos conflitantes.
+- Manter esta regra separada do agendamento simples, porque depende de contexto clinico e fonte confiavel.
 
 ### Fase 4 - Mobile Base
 
@@ -441,6 +457,7 @@ Acao:
 - Melhorar cobertura de testes.
 - Adicionar lint/test/build tambem no mobile.
 - Revisar Docker e variaveis de ambiente.
+- Configurar Swagger/OpenAPI para testar as rotas em ambiente local.
 - Documentar como rodar localmente.
 - Garantir CI verde em PR para `develop`.
 - Garantir CD backend somente em merge para `main`.

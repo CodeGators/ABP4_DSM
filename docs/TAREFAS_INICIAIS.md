@@ -93,10 +93,35 @@ Tarefas:
 - [ ] Criar CRUD de agendamentos.
 - [ ] Vincular agendamentos a medicamentos.
 - [ ] Validar horarios e dias da semana.
+- [ ] Suportar agendamentos por horarios fixos.
+- [ ] Suportar agendamentos por intervalo, como de 8 em 8 horas.
+- [ ] Permitir inicio/fim do tratamento e tolerancia de retirada.
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
-## 4. Eventos e Historico
+## 4. Configurar e Validar Banco Local
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/configuracao-banco-local
+```
+
+Tarefas:
+
+- [ ] Criar `backend/.env.example` com `PORT` e `DATABASE_URL`.
+- [ ] Revisar `docker-compose.yml` para Postgres e backend.
+- [ ] Subir Postgres local com `docker compose up -d postgres`.
+- [ ] Rodar migrations do TypeORM no banco local.
+- [ ] Validar tabelas `medicamentos` e `agendamentos_medicamentos`.
+- [ ] Subir backend conectado ao banco real.
+- [ ] Testar manualmente rotas principais usando banco local.
+- [ ] Documentar comandos no README.
+- [ ] Garantir que dados sensiveis continuem fora do Git.
+
+## 5. Eventos e Historico
 
 Branch sugerida:
 
@@ -116,7 +141,28 @@ Tarefas:
 - [ ] Criar testes.
 - [ ] Abrir PR para `develop`.
 
-## 5. Base do Mobile
+## 6. Restricoes e Interacoes entre Medicamentos
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/restricoes-medicamentos
+```
+
+Tarefas:
+
+- [ ] Modelar restricoes entre medicamentos do mesmo paciente.
+- [ ] Permitir registrar que dois medicamentos nao devem ser tomados juntos.
+- [ ] Permitir configurar intervalo minimo entre medicamentos conflitantes.
+- [ ] Alertar ao criar ou alterar agendamento com conflito.
+- [ ] Criar testes para conflitos simples.
+- [ ] Avaliar integracao futura com base publica de medicamentos/bulas.
+
+Observacao: esta tarefa nao substitui orientacao medica. O sistema deve alertar sobre restricoes cadastradas e, futuramente, restricoes vindas de fonte confiavel.
+
+## 7. Base do Mobile
 
 Branch sugerida:
 
@@ -138,7 +184,7 @@ Tarefas:
 - [ ] Ajustar navegacao por abas.
 - [ ] Abrir PR para `develop`.
 
-## 6. Base Publica de Medicamentos e Bulas
+## 8. Base Publica de Medicamentos e Bulas
 
 Branch sugerida:
 
@@ -162,7 +208,27 @@ Tarefas:
 
 Observacao: esta base deve ajudar o cadastro, mas nao substitui o medicamento do paciente. O medicamento cadastrado no tratamento continua sendo uma entidade propria do PillGator.
 
-## 7. Qualidade e CI/CD
+## 9. Documentacao Interativa da API com Swagger
+
+Branch sugerida:
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c feature/swagger-api
+```
+
+Tarefas:
+
+- [ ] Instalar e configurar Swagger/OpenAPI no backend.
+- [ ] Expor a documentacao em `GET /docs`.
+- [ ] Expor o JSON OpenAPI em `GET /docs.json`.
+- [ ] Documentar rotas de saude, medicamentos e agendamentos.
+- [ ] Documentar exemplos de payload e respostas de erro.
+- [ ] Garantir que seja possivel testar as rotas pelo Swagger UI.
+- [ ] Criar teste simples garantindo que `/docs.json` responde.
+
+## 10. Qualidade e CI/CD
 
 Tarefas:
 
@@ -178,8 +244,11 @@ Tarefas:
 2. TypeORM/PostgreSQL.
 3. CRUD de medicamentos.
 4. Agendamentos.
-5. Eventos/historico.
-6. Mobile consumindo a API.
-7. Base publica de medicamentos e bulas.
-8. Autenticacao.
-9. Ajustes finais de CI/CD e documentacao.
+5. Configurar e validar banco local.
+6. Eventos/historico.
+7. Restricoes e interacoes entre medicamentos.
+8. Mobile consumindo a API.
+9. Swagger/OpenAPI para testar rotas.
+10. Base publica de medicamentos e bulas.
+11. Autenticacao.
+12. Ajustes finais de CI/CD e documentacao.
