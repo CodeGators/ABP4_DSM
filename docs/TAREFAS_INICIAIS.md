@@ -140,17 +140,17 @@ git switch -c feature/historico-eventos
 
 Tarefas:
 
-- [ ] Criar entidade `EventoMedicamento`.
-- [ ] Criar modulo `eventos`.
-- [ ] Criar endpoint para registrar evento.
-- [ ] Criar endpoint para listar historico.
-- [ ] Registrar eventos de alerta emitido.
-- [ ] Registrar eventos de compartimento aberto.
-- [ ] Registrar eventos de medicamento retirado.
-- [ ] Registrar eventos de atraso ou falha.
-- [ ] Relacionar eventos a medicamento, agendamento e dispositivo quando existir.
-- [ ] Preparar tipos de evento para futura integracao IoT.
-- [ ] Criar testes.
+- [x] Criar entidade `EventoMedicamento`.
+- [x] Criar modulo `eventos`.
+- [x] Criar endpoint para registrar evento.
+- [x] Criar endpoint para listar historico.
+- [x] Registrar eventos de alerta emitido.
+- [x] Registrar eventos de compartimento aberto.
+- [x] Registrar eventos de medicamento retirado.
+- [x] Registrar eventos de atraso ou falha.
+- [x] Relacionar eventos a medicamento, agendamento e dispositivo quando existir.
+- [x] Preparar tipos de evento para futura integracao IoT.
+- [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 
 ## 6. Usuarios, Pacientes e Responsaveis
