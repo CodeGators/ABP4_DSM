@@ -37,7 +37,7 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 | RF09 | App mobile para programacao, historico e notificacoes | Pendente | Base do mobile |
 | RF10 | Integracao com servidor em nuvem para programacoes, registros e eventos | Pendente | Integracao IoT, deploy/cloud |
 | RF11 | Sincronizacao de dados entre dispositivo, servidor e app | Pendente | Sincronizacao, retry, contratos |
-| RF12 | Cadastro de responsaveis | Pendente | Usuarios, pacientes e responsaveis |
+| RF12 | Cadastro de responsaveis | Parcial | Backend criou usuarios, pacientes e vinculos; falta autenticacao e mobile |
 
 ## Requisitos Nao Funcionais
 
@@ -76,7 +76,7 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 ## Pendencias Principais
 
 1. Validar banco local com Docker e migrations.
-2. Criar autenticacao, usuarios, pacientes e responsaveis.
+2. Criar autenticacao e integrar usuarios, pacientes e responsaveis ao mobile.
 3. Modelar dispositivos e compartimentos.
 4. Criar integracao backend/IoT por HTTP ou MQTT.
 5. Registrar eventos de abertura, retirada, alerta, atraso e falha.

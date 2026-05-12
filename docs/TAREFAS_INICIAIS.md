@@ -165,13 +165,13 @@ git switch -c feature/usuarios-pacientes-responsaveis
 
 Tarefas:
 
-- [ ] Criar entidade `Usuario`.
-- [ ] Criar entidade `Paciente`.
-- [ ] Criar vinculo entre paciente e responsaveis.
-- [ ] Permitir um ou mais responsaveis por paciente.
-- [ ] Criar CRUD minimo de usuarios/pacientes/responsaveis.
-- [ ] Preparar modelo para responsaveis receberem notificacoes.
-- [ ] Criar testes.
+- [x] Criar entidade `Usuario`.
+- [x] Criar entidade `Paciente`.
+- [x] Criar vinculo entre paciente e responsaveis.
+- [x] Permitir um ou mais responsaveis por paciente.
+- [x] Criar CRUD minimo de usuarios/pacientes/responsaveis.
+- [x] Preparar modelo para responsaveis receberem notificacoes.
+- [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 
 ## 7. Autenticacao e Seguranca
