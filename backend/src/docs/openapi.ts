@@ -27,6 +27,11 @@ export const openApiDocument = {
       name: 'Agendamentos',
       description:
         'Programacao de quando um medicamento deve ser tomado. Pode ser por horarios fixos ou por intervalo, como de 8 em 8 horas.'
+    },
+    {
+      name: 'Eventos',
+      description:
+        'Historico do que aconteceu com os medicamentos: alerta emitido, compartimento aberto, medicamento retirado, atraso ou falha.'
     }
   ],
   paths: {
@@ -371,6 +376,190 @@ export const openApiDocument = {
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
+    },
+    '/eventos': {
+      get: {
+        tags: ['Eventos'],
+        summary: 'Lista historico de eventos',
+        description:
+          'Retorna o historico de eventos registrados. Use os filtros para ver apenas eventos de um medicamento, agendamento, dispositivo, tipo ou origem.',
+        parameters: [
+          {
+            name: 'medicamentoId',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. UUID do medicamento para ver apenas eventos dele.',
+            schema: { type: 'string', format: 'uuid' },
+            example: '7b8d7b2a-0d8d-4f87-8a3f-9e5a3f2c1111'
+          },
+          {
+            name: 'agendamentoId',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. UUID do agendamento para ver apenas eventos dessa programacao.',
+            schema: { type: 'string', format: 'uuid' },
+            example: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222'
+          },
+          {
+            name: 'dispositivoId',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. Identificador do dispositivo IoT quando o evento veio ou sera usado por um dispositivo.',
+            schema: { type: 'string' },
+            example: 'pillgator-01'
+          },
+          {
+            name: 'tipo',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. Tipo do evento. Valores aceitos: alerta_emitido, compartimento_aberto, medicamento_retirado, atraso, falha.',
+            schema: {
+              type: 'string',
+              enum: [
+                'alerta_emitido',
+                'compartimento_aberto',
+                'medicamento_retirado',
+                'atraso',
+                'falha'
+              ]
+            },
+            example: 'medicamento_retirado'
+          },
+          {
+            name: 'origem',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. De onde veio o evento: backend, mobile ou iot.',
+            schema: {
+              type: 'string',
+              enum: ['backend', 'mobile', 'iot']
+            },
+            example: 'iot'
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Lista de eventos do historico',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Evento' }
+                },
+                example: [
+                  {
+                    id: '8d8c74d7-2bd5-4db8-bb20-27b844c83333',
+                    medicamentoId: '7b8d7b2a-0d8d-4f87-8a3f-9e5a3f2c1111',
+                    agendamentoId: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222',
+                    dispositivoId: 'pillgator-01',
+                    tipo: 'medicamento_retirado',
+                    origem: 'iot',
+                    ocorridoEm: '2026-05-12T10:00:00.000Z',
+                    descricao: 'Paciente retirou o medicamento.',
+                    dados: { compartimento: 1 },
+                    criadoEm: '2026-05-12T10:00:01.000Z'
+                  }
+                ]
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' }
+        }
+      },
+      post: {
+        tags: ['Eventos'],
+        summary: 'Registra um evento no historico',
+        description:
+          'Use esta rota para registrar algo que aconteceu com o tratamento. Exemplos: a API gerou um alerta, o dispositivo informou que um compartimento abriu, o paciente retirou o remedio, houve atraso ou aconteceu uma falha.',
+        requestBody: {
+          required: true,
+          description:
+            '`tipo` e obrigatorio. `origem` e opcional e, se nao for enviada, o backend assume `backend`. Informe `medicamentoId` ou `agendamentoId` quando o evento estiver ligado a um tratamento. Se enviar `agendamentoId`, o backend consegue descobrir o medicamento.',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CriarEvento' },
+              examples: {
+                alertaEmitido: {
+                  summary: 'Alerta emitido pelo backend',
+                  value: {
+                    agendamentoId: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222',
+                    dispositivoId: 'pillgator-01',
+                    tipo: 'alerta_emitido',
+                    origem: 'backend',
+                    descricao: 'Alerta enviado ao dispositivo.'
+                  }
+                },
+                retiradaIot: {
+                  summary: 'Retirada registrada pelo dispositivo',
+                  value: {
+                    agendamentoId: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222',
+                    dispositivoId: 'pillgator-01',
+                    tipo: 'medicamento_retirado',
+                    origem: 'iot',
+                    ocorridoEm: '2026-05-12T10:00:00.000Z',
+                    descricao: 'Paciente retirou o medicamento.',
+                    dados: {
+                      compartimento: 1,
+                      sensorConfirmouAbertura: true
+                    }
+                  }
+                },
+                atraso: {
+                  summary: 'Atraso identificado pelo backend',
+                  value: {
+                    medicamentoId: '7b8d7b2a-0d8d-4f87-8a3f-9e5a3f2c1111',
+                    agendamentoId: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222',
+                    tipo: 'atraso',
+                    origem: 'backend',
+                    descricao: 'Medicamento nao retirado dentro da tolerancia.',
+                    dados: {
+                      toleranciaMinutos: 30,
+                      horarioPrevisto: '08:00'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Evento registrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Evento' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/eventos/{id}': {
+      get: {
+        tags: ['Eventos'],
+        summary: 'Busca um evento pelo id',
+        description:
+          'Carrega os detalhes de um evento especifico do historico. Use o `id` retornado ao listar ou registrar eventos.',
+        parameters: [{ $ref: '#/components/parameters/EventoId' }],
+        responses: {
+          '200': {
+            description: 'Evento encontrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Evento' }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
     }
   },
   components: {
@@ -390,6 +579,14 @@ export const openApiDocument = {
         description: 'UUID do agendamento.',
         schema: { type: 'string', format: 'uuid' },
         example: '1c70e1d4-73c0-4d9b-9d3a-2a7df0932222'
+      },
+      EventoId: {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'UUID do evento.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '8d8c74d7-2bd5-4db8-bb20-27b844c83333'
       }
     },
     responses: {
@@ -731,6 +928,143 @@ export const openApiDocument = {
           ativo: {
             type: 'boolean',
             description: 'Use false para desativar ou true para reativar.'
+          }
+        }
+      },
+      Evento: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico do evento.'
+          },
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Medicamento relacionado ao evento. Pode ser null em evento geral de dispositivo.'
+          },
+          agendamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Agendamento relacionado ao evento. Pode ser null quando o evento nao veio de uma programacao.'
+          },
+          dispositivoId: {
+            type: 'string',
+            nullable: true,
+            description:
+              'Identificador do dispositivo IoT. Ainda nao depende de cadastro de dispositivo.'
+          },
+          tipo: {
+            type: 'string',
+            enum: [
+              'alerta_emitido',
+              'compartimento_aberto',
+              'medicamento_retirado',
+              'atraso',
+              'falha'
+            ],
+            description:
+              'Tipo do acontecimento registrado no historico.'
+          },
+          origem: {
+            type: 'string',
+            enum: ['backend', 'mobile', 'iot'],
+            description: 'Quem registrou ou enviou o evento.'
+          },
+          ocorridoEm: {
+            type: 'string',
+            format: 'date-time',
+            description:
+              'Data e hora em que o evento aconteceu. Se nao enviar no cadastro, o backend usa o momento atual.'
+          },
+          descricao: {
+            type: 'string',
+            nullable: true,
+            description:
+              'Texto curto em portugues explicando o evento para historico.'
+          },
+          dados: {
+            type: 'object',
+            nullable: true,
+            additionalProperties: true,
+            description:
+              'Objeto JSON opcional com detalhes tecnicos, como compartimento, sensor ou horario previsto.'
+          },
+          criadoEm: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Data em que o registro foi salvo no banco.'
+          }
+        }
+      },
+      CriarEvento: {
+        type: 'object',
+        required: ['tipo'],
+        properties: {
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. UUID do medicamento. Se enviar agendamentoId, pode omitir este campo.'
+          },
+          agendamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. UUID do agendamento. Quando enviado, o backend valida se ele existe e esta ativo.'
+          },
+          dispositivoId: {
+            type: 'string',
+            nullable: true,
+            maxLength: 120,
+            description:
+              'Opcional. Identificador do dispositivo IoT, por exemplo pillgator-01.'
+          },
+          tipo: {
+            type: 'string',
+            enum: [
+              'alerta_emitido',
+              'compartimento_aberto',
+              'medicamento_retirado',
+              'atraso',
+              'falha'
+            ],
+            description:
+              'Obrigatorio. Escolha o tipo que melhor representa o que aconteceu.'
+          },
+          origem: {
+            type: 'string',
+            enum: ['backend', 'mobile', 'iot'],
+            default: 'backend',
+            description:
+              'Opcional. Informe backend, mobile ou iot. Se nao enviar, sera backend.'
+          },
+          ocorridoEm: {
+            type: 'string',
+            format: 'date-time',
+            description:
+              'Opcional. Data/hora ISO 8601. Exemplo: 2026-05-12T10:00:00.000Z.'
+          },
+          descricao: {
+            type: 'string',
+            nullable: true,
+            maxLength: 1000,
+            description:
+              'Opcional. Explicacao simples para o historico do paciente/responsavel.'
+          },
+          dados: {
+            type: 'object',
+            nullable: true,
+            additionalProperties: true,
+            description:
+              'Opcional. Objeto JSON com detalhes extras. Nao envie lista nem texto solto aqui.'
           }
         }
       }

@@ -1,6 +1,10 @@
 import { AppDataSource } from '../config/data-source.js';
 
-const tabelasEsperadas = ['medicamentos', 'agendamentos_medicamentos'];
+const tabelasEsperadas = [
+  'medicamentos',
+  'agendamentos_medicamentos',
+  'eventos_medicamentos'
+];
 
 async function verificarBanco(): Promise<void> {
   await AppDataSource.initialize();

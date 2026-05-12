@@ -5,11 +5,14 @@ import { configurarSwagger } from './docs/swagger.js';
 import { tratarErros } from './middlewares/tratarErros.js';
 import { criarAgendamentosRotas } from './modulos/agendamentos/agendamentosRotas.js';
 import type { AgendamentosServicoContrato } from './modulos/agendamentos/agendamentosTipos.js';
+import { criarEventosRotas } from './modulos/eventos/eventosRotas.js';
+import type { EventosServicoContrato } from './modulos/eventos/eventosTipos.js';
 import { criarMedicamentosRotas } from './modulos/medicamentos/medicamentosRotas.js';
 import type { MedicamentosServicoContrato } from './modulos/medicamentos/medicamentosTipos.js';
 
 type CriarAppOpcoes = {
   agendamentosServico?: AgendamentosServicoContrato;
+  eventosServico?: EventosServicoContrato;
   medicamentosServico?: MedicamentosServicoContrato;
 };
 
@@ -37,6 +40,7 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
     '/agendamentos',
     criarAgendamentosRotas(opcoes.agendamentosServico)
   );
+  app.use('/eventos', criarEventosRotas(opcoes.eventosServico));
 
   app.use(tratarErros);
 
