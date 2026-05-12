@@ -4,13 +4,18 @@
 
 O PillGator e um projeto academico de ABP do 4o semestre de DSM da FATEC Jacarei. O objetivo e construir uma solucao para controle de medicamentos, com aplicativo mobile para pacientes/cuidadores e backend para cadastro, agenda, historico e monitoramento.
 
-Nesta fase, a parte de IoT/hardware ficara sob responsabilidade de outros membros do grupo. Este roadmap cobre principalmente:
+O firmware/codigo C++ do dispositivo IoT ficara sob responsabilidade de outros membros do grupo. O restante da solucao fica neste roadmap, incluindo contratos e integracao backend com o dispositivo.
 
 - Aplicativo mobile com React Native e Expo.
 - Backend com Node.js, TypeScript, Express, TypeORM e PostgreSQL.
 - Comunicacao mobile/backend usando Axios.
+- Integracao backend com IoT por HTTP/MQTT ou protocolo equivalente.
 - Banco de dados PostgreSQL.
 - CI/CD com GitHub Actions.
+
+Referencia complementar:
+
+- `docs/REQUISITOS_DESAFIO_4DSM.md`: rastreabilidade entre o PDF do desafio e as frentes de trabalho.
 
 ## Estado Atual do Projeto
 
@@ -28,23 +33,25 @@ Tecnologias atuais:
 
 Implementado hoje:
 
-- `GET /health` retornando `{ status: "ok" }`.
-- `GET /medicamentos` retornando uma lista fixa de medicamentos mockados.
+- `GET /health` e `GET /saude` retornando `{ status: "ok" }`.
+- Estrutura separada entre `app.ts` e `server.ts`.
+- TypeORM configurado com PostgreSQL.
+- Entidades e migrations iniciais de medicamentos e agendamentos.
+- CRUD de medicamentos.
+- CRUD de agendamentos.
+- Testes automatizados de saude, medicamentos e agendamentos.
 
 Ainda falta:
 
-- TypeORM.
-- Estrutura em camadas.
-- Conexao real com PostgreSQL.
-- Entidades, migrations e repositories.
 - Autenticacao.
-- CRUD de usuarios, pacientes, cuidadores e medicamentos.
-- Agenda de horarios.
+- CRUD de usuarios, pacientes e responsaveis.
+- Validar conexao real com PostgreSQL via Docker/migrations locais.
 - Registro de tomadas/retiradas.
 - Regras de alerta.
-- Validacao de entrada.
-- Tratamento padronizado de erros.
-- Testes integrados usando a aplicacao real.
+- Integracao backend com dispositivo IoT.
+- Notificacoes para responsaveis.
+- Swagger/OpenAPI.
+- Deploy em ambiente real.
 
 ### Mobile
 
