@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint .",
@@ -38,7 +38,7 @@
     "jest": "^30.3.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.9",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"
   }

@@ -119,12 +119,12 @@ Tarefas:
 
 - [x] Criar `backend/.env.example` com `PORT` e `DATABASE_URL`.
 - [x] Revisar `docker-compose.yml` para Postgres e backend.
-- [ ] Subir Postgres local com `docker compose up -d postgres`.
-- [ ] Rodar migrations do TypeORM no banco local.
-- [ ] Validar tabelas `medicamentos` e `agendamentos_medicamentos`.
+- [x] Subir Postgres local com `docker compose up -d postgres`.
+- [x] Rodar migrations do TypeORM no banco local.
+- [x] Validar tabelas `medicamentos` e `agendamentos_medicamentos`.
 - [x] Criar script de verificacao das tabelas do banco.
-- [ ] Subir backend conectado ao banco real.
-- [ ] Testar manualmente rotas principais usando banco local.
+- [x] Subir backend conectado ao banco real.
+- [x] Testar manualmente rotas principais usando banco local.
 - [x] Documentar comandos no README.
 - [x] Garantir que dados sensiveis continuem fora do Git.
 
