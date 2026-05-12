@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 
+import { configurarSwagger } from './docs/swagger.js';
 import { tratarErros } from './middlewares/tratarErros.js';
 import { criarAgendamentosRotas } from './modulos/agendamentos/agendamentosRotas.js';
 import type { AgendamentosServicoContrato } from './modulos/agendamentos/agendamentosTipos.js';
@@ -17,6 +18,8 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
 
   app.use(cors());
   app.use(express.json());
+
+  configurarSwagger(app);
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });

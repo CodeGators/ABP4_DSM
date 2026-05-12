@@ -24,6 +24,7 @@
     "express": "^5.2.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
@@ -33,6 +34,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
     "@types/supertest": "^7.2.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^10.2.1",
     "globals": "^17.5.0",
     "jest": "^30.3.0",

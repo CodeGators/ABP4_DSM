@@ -369,13 +369,13 @@ git switch -c feature/swagger-api
 
 Tarefas:
 
-- [ ] Instalar e configurar Swagger/OpenAPI no backend.
-- [ ] Expor a documentacao em `GET /docs`.
-- [ ] Expor o JSON OpenAPI em `GET /docs.json`.
-- [ ] Documentar rotas de saude, medicamentos e agendamentos.
-- [ ] Documentar exemplos de payload e respostas de erro.
-- [ ] Garantir que seja possivel testar as rotas pelo Swagger UI.
-- [ ] Criar teste simples garantindo que `/docs.json` responde.
+- [x] Instalar e configurar Swagger/OpenAPI no backend.
+- [x] Expor a documentacao em `GET /docs`.
+- [x] Expor o JSON OpenAPI em `GET /docs.json`.
+- [x] Documentar rotas de saude, medicamentos e agendamentos.
+- [x] Documentar exemplos de payload e respostas de erro.
+- [x] Garantir que seja possivel testar as rotas pelo Swagger UI.
+- [x] Criar teste simples garantindo que `/docs.json` responde.
 
 ## 16. Documentacao Tecnica e Diagramas
 

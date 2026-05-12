@@ -134,6 +134,18 @@ GET http://localhost:3000/health
 GET http://localhost:3000/saude
 ```
 
+Documentacao interativa da API:
+
+```text
+http://localhost:3000/docs
+```
+
+JSON OpenAPI:
+
+```text
+http://localhost:3000/docs.json
+```
+
 ### Comandos uteis do backend
 
 ```bash
