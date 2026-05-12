@@ -109,7 +109,13 @@ cd backend
 npm run migration:run
 ```
 
-5. Inicie a API:
+5. Verifique se as tabelas esperadas foram criadas:
+
+```bash
+npm run db:check
+```
+
+6. Inicie a API:
 
 ```bash
 npm run dev
@@ -128,6 +134,18 @@ GET http://localhost:3000/health
 GET http://localhost:3000/saude
 ```
 
+Documentacao interativa da API:
+
+```text
+http://localhost:3000/docs
+```
+
+JSON OpenAPI:
+
+```text
+http://localhost:3000/docs.json
+```
+
 ### Comandos uteis do backend
 
 ```bash
@@ -136,6 +154,7 @@ npm test
 npm run build
 npm run migration:run
 npm run migration:revert
+npm run db:check
 ```
 
 ### Banco de dados
