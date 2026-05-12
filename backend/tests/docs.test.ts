@@ -13,11 +13,15 @@ describe('Documentacao da API', () => {
         title: 'PillGator API'
       }
     });
+    expect(response.body.paths).toHaveProperty('/usuarios');
+    expect(response.body.paths).toHaveProperty('/pacientes');
     expect(response.body.paths).toHaveProperty('/medicamentos');
     expect(response.body.paths).toHaveProperty('/agendamentos');
     expect(response.body.paths).toHaveProperty('/eventos');
     expect(response.body.tags).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ name: 'Usuarios' }),
+        expect.objectContaining({ name: 'Pacientes' }),
         expect.objectContaining({ name: 'Medicamentos' }),
         expect.objectContaining({ name: 'Agendamentos' }),
         expect.objectContaining({ name: 'Eventos' })

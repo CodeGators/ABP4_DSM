@@ -3,7 +3,10 @@ import { AppDataSource } from '../config/data-source.js';
 const tabelasEsperadas = [
   'medicamentos',
   'agendamentos_medicamentos',
-  'eventos_medicamentos'
+  'eventos_medicamentos',
+  'usuarios',
+  'pacientes',
+  'pacientes_responsaveis'
 ];
 
 async function verificarBanco(): Promise<void> {

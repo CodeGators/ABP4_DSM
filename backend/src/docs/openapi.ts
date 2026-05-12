@@ -19,6 +19,16 @@ export const openApiDocument = {
         'Rotas simples para verificar se a API esta ligada e respondendo.'
     },
     {
+      name: 'Usuarios',
+      description:
+        'Cadastro de pessoas que usam o sistema: paciente, responsavel ou administrador. Login e senha entram na tarefa futura de autenticacao.'
+    },
+    {
+      name: 'Pacientes',
+      description:
+        'Cadastro do paciente e vinculo com um ou mais responsaveis que poderao acompanhar historico e receber notificacoes.'
+    },
+    {
       name: 'Medicamentos',
       description:
         'Cadastro dos medicamentos do paciente. Aqui ficam dados como nome, dosagem e observacoes. O horario de uso fica em Agendamentos.'
@@ -70,6 +80,352 @@ export const openApiDocument = {
               }
             }
           }
+        }
+      }
+    },
+    '/usuarios': {
+      get: {
+        tags: ['Usuarios'],
+        summary: 'Lista usuarios ativos',
+        description:
+          'Retorna usuarios ativos. Use o filtro `tipo` quando quiser listar apenas pacientes, responsaveis ou administradores.',
+        parameters: [
+          {
+            name: 'tipo',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. Valores aceitos: paciente, responsavel ou administrador.',
+            schema: {
+              type: 'string',
+              enum: ['paciente', 'responsavel', 'administrador']
+            },
+            example: 'responsavel'
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Lista de usuarios',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Usuario' }
+                }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' }
+        }
+      },
+      post: {
+        tags: ['Usuarios'],
+        summary: 'Cadastra um usuario',
+        description:
+          'Cria uma pessoa no sistema. Por enquanto esta rota nao cria senha; login e autenticacao entram na proxima tarefa de seguranca.',
+        requestBody: {
+          required: true,
+          description:
+            '`nome`, `email` e `tipo` sao obrigatorios. `telefone` e `recebeNotificacoes` sao opcionais.',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CriarUsuario' },
+              examples: {
+                responsavel: {
+                  summary: 'Responsavel que recebera notificacoes',
+                  value: {
+                    nome: 'Maria Responsavel',
+                    email: 'maria@example.com',
+                    telefone: '11999999999',
+                    tipo: 'responsavel',
+                    recebeNotificacoes: true
+                  }
+                },
+                paciente: {
+                  summary: 'Paciente com usuario proprio',
+                  value: {
+                    nome: 'Joao Paciente',
+                    email: 'joao@example.com',
+                    tipo: 'paciente'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Usuario criado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Usuario' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/usuarios/{id}': {
+      get: {
+        tags: ['Usuarios'],
+        summary: 'Busca um usuario pelo id',
+        description:
+          'Use esta rota para carregar os dados de um usuario especifico.',
+        parameters: [{ $ref: '#/components/parameters/UsuarioId' }],
+        responses: {
+          '200': {
+            description: 'Usuario encontrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Usuario' }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      },
+      put: {
+        tags: ['Usuarios'],
+        summary: 'Atualiza um usuario',
+        description:
+          'Atualiza dados cadastrais. Envie apenas os campos que deseja alterar. Use `ativo: false` para desativar.',
+        parameters: [{ $ref: '#/components/parameters/UsuarioId' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/AtualizarUsuario' },
+              example: {
+                nome: 'Maria Silva',
+                telefone: '11888888888',
+                recebeNotificacoes: true
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Usuario atualizado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Usuario' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      },
+      delete: {
+        tags: ['Usuarios'],
+        summary: 'Remove um usuario',
+        description:
+          'Faz remocao logica do usuario, alterando `ativo` para false.',
+        parameters: [{ $ref: '#/components/parameters/UsuarioId' }],
+        responses: {
+          '204': { description: 'Usuario removido sem corpo de resposta' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/pacientes': {
+      get: {
+        tags: ['Pacientes'],
+        summary: 'Lista pacientes ativos',
+        description:
+          'Retorna os pacientes ativos cadastrados. Cada paciente pode ter um usuario proprio, mas isso e opcional.',
+        responses: {
+          '200': {
+            description: 'Lista de pacientes',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Paciente' }
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ['Pacientes'],
+        summary: 'Cadastra um paciente',
+        description:
+          'Cria o cadastro do paciente que recebera os medicamentos. `usuarioId` e opcional e so deve apontar para usuario do tipo paciente.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CriarPaciente' },
+              examples: {
+                semUsuario: {
+                  summary: 'Paciente sem login proprio',
+                  value: {
+                    nome: 'Joao Paciente',
+                    dataNascimento: '1950-01-01',
+                    observacoes: 'Prefere alertas sonoros.'
+                  }
+                },
+                comUsuario: {
+                  summary: 'Paciente ligado a usuario',
+                  value: {
+                    usuarioId: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444',
+                    nome: 'Joao Paciente',
+                    dataNascimento: '1950-01-01'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Paciente criado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Paciente' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/pacientes/{id}': {
+      get: {
+        tags: ['Pacientes'],
+        summary: 'Busca um paciente pelo id',
+        parameters: [{ $ref: '#/components/parameters/PacienteId' }],
+        responses: {
+          '200': {
+            description: 'Paciente encontrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Paciente' }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      },
+      put: {
+        tags: ['Pacientes'],
+        summary: 'Atualiza um paciente',
+        description:
+          'Atualiza dados cadastrais do paciente. Envie apenas os campos que deseja alterar.',
+        parameters: [{ $ref: '#/components/parameters/PacienteId' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/AtualizarPaciente' },
+              example: {
+                observacoes: 'Paciente prefere receber ajuda da filha.',
+                ativo: true
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Paciente atualizado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Paciente' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      },
+      delete: {
+        tags: ['Pacientes'],
+        summary: 'Remove um paciente',
+        description:
+          'Faz remocao logica do paciente, alterando `ativo` para false.',
+        parameters: [{ $ref: '#/components/parameters/PacienteId' }],
+        responses: {
+          '204': { description: 'Paciente removido sem corpo de resposta' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/pacientes/{pacienteId}/responsaveis': {
+      get: {
+        tags: ['Pacientes'],
+        summary: 'Lista responsaveis de um paciente',
+        description:
+          'Mostra quais usuarios do tipo responsavel estao vinculados ao paciente.',
+        parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
+        responses: {
+          '200': {
+            description: 'Lista de vinculos com responsaveis',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/PacienteResponsavel' }
+                }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      },
+      post: {
+        tags: ['Pacientes'],
+        summary: 'Vincula responsavel ao paciente',
+        description:
+          'Liga um usuario do tipo `responsavel` ao paciente. Esse vinculo prepara quem podera receber notificacoes no futuro.',
+        parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/VincularResponsavel' },
+              example: {
+                responsavelId: '4a0c9282-5fa8-4bb7-a03a-60d9c8a45555',
+                parentesco: 'Filha',
+                recebeNotificacoes: true
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Responsavel vinculado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/PacienteResponsavel' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/pacientes/{pacienteId}/responsaveis/{responsavelId}': {
+      delete: {
+        tags: ['Pacientes'],
+        summary: 'Remove responsavel do paciente',
+        description:
+          'Remove logicamente o vinculo entre paciente e responsavel. O usuario responsavel nao e apagado.',
+        parameters: [
+          { $ref: '#/components/parameters/PacienteIdNaRota' },
+          { $ref: '#/components/parameters/ResponsavelId' }
+        ],
+        responses: {
+          '204': { description: 'Vinculo removido sem corpo de resposta' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
     },
@@ -564,6 +920,38 @@ export const openApiDocument = {
   },
   components: {
     parameters: {
+      UsuarioId: {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'UUID do usuario.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '4a0c9282-5fa8-4bb7-a03a-60d9c8a45555'
+      },
+      PacienteId: {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'UUID do paciente.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444'
+      },
+      PacienteIdNaRota: {
+        name: 'pacienteId',
+        in: 'path',
+        required: true,
+        description: 'UUID do paciente.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444'
+      },
+      ResponsavelId: {
+        name: 'responsavelId',
+        in: 'path',
+        required: true,
+        description: 'UUID do usuario responsavel.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '4a0c9282-5fa8-4bb7-a03a-60d9c8a45555'
+      },
       MedicamentoId: {
         name: 'id',
         in: 'path',
@@ -607,6 +995,16 @@ export const openApiDocument = {
             example: { mensagem: 'Medicamento nao encontrado' }
           }
         }
+      },
+      ErroConflito: {
+        description:
+          'Conflito com um registro existente, como email ja cadastrado ou usuario ja vinculado a outro paciente.',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Erro' },
+            example: { mensagem: 'Email ja cadastrado' }
+          }
+        }
       }
     },
     schemas: {
@@ -627,6 +1025,281 @@ export const openApiDocument = {
             type: 'string',
             description: 'Texto explicando o erro em portugues.',
             example: 'Campo nome e obrigatorio'
+          }
+        }
+      },
+      Usuario: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico do usuario.'
+          },
+          nome: {
+            type: 'string',
+            description: 'Nome da pessoa.',
+            example: 'Maria Responsavel'
+          },
+          email: {
+            type: 'string',
+            format: 'email',
+            description:
+              'Email unico do usuario. Sera usado futuramente no login.',
+            example: 'maria@example.com'
+          },
+          telefone: {
+            type: 'string',
+            nullable: true,
+            description: 'Telefone para contato.',
+            example: '11999999999'
+          },
+          tipo: {
+            type: 'string',
+            enum: ['paciente', 'responsavel', 'administrador'],
+            description:
+              'Papel do usuario dentro do sistema.'
+          },
+          recebeNotificacoes: {
+            type: 'boolean',
+            description:
+              'Indica se esse usuario deve receber notificacoes quando estiver vinculado a um paciente.'
+          },
+          ativo: { type: 'boolean' },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      CriarUsuario: {
+        type: 'object',
+        required: ['nome', 'email', 'tipo'],
+        properties: {
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Obrigatorio. Nome da pessoa.',
+            example: 'Maria Responsavel'
+          },
+          email: {
+            type: 'string',
+            format: 'email',
+            maxLength: 160,
+            description: 'Obrigatorio. Email unico.',
+            example: 'maria@example.com'
+          },
+          telefone: {
+            type: 'string',
+            nullable: true,
+            maxLength: 30,
+            description: 'Opcional. Telefone para contato.',
+            example: '11999999999'
+          },
+          tipo: {
+            type: 'string',
+            enum: ['paciente', 'responsavel', 'administrador'],
+            description:
+              'Obrigatorio. Use paciente para quem toma medicamentos, responsavel para cuidador/familiar e administrador para gestao.'
+          },
+          recebeNotificacoes: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Opcional. Use true quando o usuario puder receber notificacoes.'
+          }
+        }
+      },
+      AtualizarUsuario: {
+        type: 'object',
+        properties: {
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Opcional. Novo nome.'
+          },
+          email: {
+            type: 'string',
+            format: 'email',
+            maxLength: 160,
+            description: 'Opcional. Novo email unico.'
+          },
+          telefone: {
+            type: 'string',
+            nullable: true,
+            maxLength: 30,
+            description: 'Opcional. Novo telefone.'
+          },
+          tipo: {
+            type: 'string',
+            enum: ['paciente', 'responsavel', 'administrador'],
+            description: 'Opcional. Novo papel do usuario.'
+          },
+          recebeNotificacoes: {
+            type: 'boolean',
+            description: 'Opcional. Ativa ou desativa notificacoes.'
+          },
+          ativo: {
+            type: 'boolean',
+            description: 'Use false para desativar ou true para reativar.'
+          }
+        }
+      },
+      Paciente: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico do paciente.'
+          },
+          usuarioId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Usuario do tipo paciente vinculado a este cadastro. Pode ser null.'
+          },
+          nome: {
+            type: 'string',
+            description: 'Nome do paciente.',
+            example: 'Joao Paciente'
+          },
+          dataNascimento: {
+            type: 'string',
+            nullable: true,
+            format: 'date',
+            description: 'Data de nascimento no formato YYYY-MM-DD.'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            description:
+              'Observacoes gerais para cuidado, acessibilidade ou preferencia.'
+          },
+          ativo: { type: 'boolean' },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      CriarPaciente: {
+        type: 'object',
+        required: ['nome'],
+        properties: {
+          usuarioId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. UUID de um usuario ativo do tipo paciente.'
+          },
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Obrigatorio. Nome do paciente.',
+            example: 'Joao Paciente'
+          },
+          dataNascimento: {
+            type: 'string',
+            nullable: true,
+            format: 'date',
+            description: 'Opcional. Formato YYYY-MM-DD.',
+            example: '1950-01-01'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            maxLength: 1000,
+            description: 'Opcional. Observacoes gerais do cuidado.'
+          }
+        }
+      },
+      AtualizarPaciente: {
+        type: 'object',
+        properties: {
+          usuarioId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. Novo usuario do tipo paciente ou null para remover vinculo.'
+          },
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Opcional. Novo nome do paciente.'
+          },
+          dataNascimento: {
+            type: 'string',
+            nullable: true,
+            format: 'date',
+            description: 'Opcional. Formato YYYY-MM-DD.'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            maxLength: 1000,
+            description: 'Opcional. Novas observacoes.'
+          },
+          ativo: {
+            type: 'boolean',
+            description: 'Use false para desativar ou true para reativar.'
+          }
+        }
+      },
+      PacienteResponsavel: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador do vinculo.'
+          },
+          pacienteId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Paciente acompanhado pelo responsavel.'
+          },
+          responsavelId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Usuario do tipo responsavel.'
+          },
+          parentesco: {
+            type: 'string',
+            nullable: true,
+            description: 'Parentesco ou relacao com o paciente.',
+            example: 'Filha'
+          },
+          recebeNotificacoes: {
+            type: 'boolean',
+            description:
+              'Indica se esse responsavel deve receber notificacoes deste paciente.'
+          },
+          ativo: { type: 'boolean' },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      VincularResponsavel: {
+        type: 'object',
+        required: ['responsavelId'],
+        properties: {
+          responsavelId: {
+            type: 'string',
+            format: 'uuid',
+            description:
+              'Obrigatorio. UUID de um usuario ativo do tipo responsavel.'
+          },
+          parentesco: {
+            type: 'string',
+            nullable: true,
+            maxLength: 80,
+            description: 'Opcional. Exemplo: Filha, Filho, Cuidador.'
+          },
+          recebeNotificacoes: {
+            type: 'boolean',
+            default: true,
+            description:
+              'Opcional. Use true para este responsavel receber alertas desse paciente.'
           }
         }
       },
