@@ -175,30 +175,40 @@ export const openApiDocument = {
         tags: ['Usuarios'],
         summary: 'Cadastra um usuario',
         description:
-          'Cria uma pessoa no sistema. Por enquanto esta rota nao cria senha; login e autenticacao entram na proxima tarefa de seguranca.',
+          'Cria uma pessoa no sistema. Para esse usuario conseguir entrar no app ou no sistema, envie tambem o campo `senha`. Se a senha nao for enviada, o usuario fica cadastrado, mas nao consegue fazer login ate receber uma senha em uma atualizacao futura.',
         requestBody: {
           required: true,
           description:
-            '`nome`, `email` e `tipo` sao obrigatorios. `telefone` e `recebeNotificacoes` sao opcionais.',
+            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais.',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarUsuario' },
               examples: {
                 responsavel: {
-                  summary: 'Responsavel que recebera notificacoes',
+                  summary: 'Responsavel com acesso ao sistema',
                   value: {
                     nome: 'Maria Responsavel',
                     email: 'maria@example.com',
                     telefone: '11999999999',
+                    senha: 'senha-segura',
                     tipo: 'responsavel',
                     recebeNotificacoes: true
                   }
                 },
                 paciente: {
-                  summary: 'Paciente com usuario proprio',
+                  summary: 'Paciente com login proprio',
                   value: {
                     nome: 'Joao Paciente',
                     email: 'joao@example.com',
+                    senha: 'senha-segura',
+                    tipo: 'paciente'
+                  }
+                },
+                pacienteSemLogin: {
+                  summary: 'Paciente sem login proprio',
+                  value: {
+                    nome: 'Ana Paciente',
+                    email: 'ana@example.com',
                     tipo: 'paciente'
                   }
                 }
@@ -1524,7 +1534,7 @@ export const openApiDocument = {
             type: 'string',
             format: 'email',
             description:
-              'Email unico do usuario. Sera usado futuramente no login.',
+              'Email unico do usuario. Sera usado no login quando o usuario tiver senha cadastrada.',
             example: 'maria@example.com'
           },
           telefone: {
@@ -1578,7 +1588,7 @@ export const openApiDocument = {
             format: 'password',
             minLength: 8,
             description:
-              'Opcional. Senha inicial do usuario. O backend salva apenas o hash, nunca a senha em texto.'
+              'Opcional para cadastrar. Necessaria para o usuario conseguir fazer login. O backend salva apenas o hash, nunca a senha em texto.'
           },
           tipo: {
             type: 'string',
