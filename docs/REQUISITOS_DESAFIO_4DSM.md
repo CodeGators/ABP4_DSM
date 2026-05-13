@@ -32,8 +32,8 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 | RF04 | Bloqueio de compartimentos indevidos | Parcial | Backend tem status de compartimento; falta regra de liberacao e firmware |
 | RF05 | Alerta sonoro | Fora do firmware, pendente no contrato | Backend deve registrar/enviar eventos/comandos; firmware executa |
 | RF06 | Registro de retirada de medicamento | Pendente | Eventos e historico; endpoint IoT para retirada |
-| RF07 | Monitoramento de atraso na administracao | Pendente | Eventos, job de atraso e tolerancia |
-| RF08 | Notificacao ao responsavel | Pendente | Responsaveis, notificacoes push |
+| RF07 | Monitoramento de atraso na administracao | Parcial | Backend verifica atrasos e registra eventos; falta agendamento automatico/job |
+| RF08 | Notificacao ao responsavel | Parcial | Backend cria historico de notificacoes internas; falta push no mobile |
 | RF09 | App mobile para programacao, historico e notificacoes | Pendente | Base do mobile |
 | RF10 | Integracao com servidor em nuvem para programacoes, registros e eventos | Pendente | Integracao IoT, deploy/cloud |
 | RF11 | Sincronizacao de dados entre dispositivo, servidor e app | Pendente | Sincronizacao, retry, contratos |

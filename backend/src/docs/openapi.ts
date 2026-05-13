@@ -40,6 +40,11 @@ export const openApiDocument = {
         'Cadastro do dispositivo PillGator e dos compartimentos onde os medicamentos ficam organizados.'
     },
     {
+      name: 'Notificacoes',
+      description:
+        'Historico de notificacoes para responsaveis e verificacao de atrasos dos medicamentos.'
+    },
+    {
       name: 'Medicamentos',
       description:
         'Cadastro dos medicamentos do paciente. Aqui ficam dados como nome, dosagem e observacoes. O horario de uso fica em Agendamentos.'
@@ -721,6 +726,92 @@ export const openApiDocument = {
         responses: {
           '204': { description: 'Compartimento removido sem corpo de resposta' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/notificacoes': {
+      get: {
+        tags: ['Notificacoes'],
+        summary: 'Lista notificacoes',
+        description:
+          'Retorna o historico de notificacoes geradas para os responsaveis. Use filtros para ver notificacoes de um paciente, responsavel ou status especifico.',
+        parameters: [
+          {
+            name: 'pacienteId',
+            in: 'query',
+            required: false,
+            description: 'Opcional. UUID do paciente.',
+            schema: { type: 'string', format: 'uuid' },
+            example: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444'
+          },
+          {
+            name: 'responsavelId',
+            in: 'query',
+            required: false,
+            description: 'Opcional. UUID do usuario responsavel.',
+            schema: { type: 'string', format: 'uuid' },
+            example: '4a0c9282-5fa8-4bb7-a03a-60d9c8a45555'
+          },
+          {
+            name: 'status',
+            in: 'query',
+            required: false,
+            description:
+              'Opcional. Status da notificacao: pendente, enviada ou erro.',
+            schema: {
+              type: 'string',
+              enum: ['pendente', 'enviada', 'erro']
+            },
+            example: 'enviada'
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Lista de notificacoes',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Notificacao' }
+                }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' }
+        }
+      }
+    },
+    '/notificacoes/verificar-atrasos': {
+      post: {
+        tags: ['Notificacoes'],
+        summary: 'Verifica medicamentos em atraso',
+        description:
+          'Analisa os agendamentos ativos, usa a tolerancia configurada em cada agendamento e registra atraso quando nao existe evento de retirada dentro do periodo esperado. Para cada atraso, cria evento `atraso` e notificacoes internas para responsaveis ativos do paciente.',
+        requestBody: {
+          required: false,
+          description:
+            '`referenciaEm` e opcional. Se nao enviar, o backend usa a data/hora atual. Em testes, envie uma data fixa em ISO 8601.',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/VerificarAtrasos' },
+              example: {
+                referenciaEm: '2026-05-11T09:00:00.000Z'
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Resultado da verificacao',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/ResultadoVerificacaoAtrasos'
+                }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' }
         }
       }
     },
@@ -1925,6 +2016,124 @@ export const openApiDocument = {
           ativo: {
             type: 'boolean',
             description: 'Use false para desativar ou true para reativar.'
+          }
+        }
+      },
+      Notificacao: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico da notificacao.'
+          },
+          pacienteId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Paciente relacionado a notificacao.'
+          },
+          responsavelId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Responsavel que recebeu a notificacao.'
+          },
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description: 'Medicamento em atraso, quando existir.'
+          },
+          agendamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description: 'Agendamento que gerou a notificacao.'
+          },
+          eventoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description: 'Evento de atraso relacionado.'
+          },
+          tipo: {
+            type: 'string',
+            enum: ['atraso_medicamento'],
+            description: 'Tipo da notificacao.'
+          },
+          canal: {
+            type: 'string',
+            enum: ['interno', 'push'],
+            description:
+              'Canal preparado para envio. Nesta fase usamos interno; push fica para integracao mobile.'
+          },
+          status: {
+            type: 'string',
+            enum: ['pendente', 'enviada', 'erro'],
+            description: 'Estado do envio da notificacao.'
+          },
+          titulo: {
+            type: 'string',
+            example: 'Medicamento em atraso'
+          },
+          mensagem: {
+            type: 'string',
+            example:
+              'Dipirona 500mg estava previsto para 08:00 e nao foi registrado como retirado.'
+          },
+          enviadaEm: {
+            type: 'string',
+            nullable: true,
+            format: 'date-time',
+            description: 'Data/hora em que o backend marcou a notificacao como enviada.'
+          },
+          lidaEm: {
+            type: 'string',
+            nullable: true,
+            format: 'date-time',
+            description: 'Data/hora de leitura futura pelo app.'
+          },
+          dados: {
+            type: 'object',
+            nullable: true,
+            additionalProperties: true,
+            description:
+              'Detalhes da notificacao, como horario previsto e limite da tolerancia.'
+          },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      VerificarAtrasos: {
+        type: 'object',
+        properties: {
+          referenciaEm: {
+            type: 'string',
+            format: 'date-time',
+            description:
+              'Opcional. Data/hora usada como referencia para calcular atrasos. Se nao enviar, usa agora.'
+          }
+        }
+      },
+      ResultadoVerificacaoAtrasos: {
+        type: 'object',
+        properties: {
+          referenciaEm: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Data/hora usada na verificacao.'
+          },
+          atrasosDetectados: {
+            type: 'integer',
+            description:
+              'Quantidade de ocorrencias de atraso encontradas e ainda nao registradas.'
+          },
+          eventosCriados: {
+            type: 'integer',
+            description: 'Quantidade de eventos de atraso criados.'
+          },
+          notificacoesCriadas: {
+            type: 'integer',
+            description: 'Quantidade de notificacoes criadas para responsaveis.'
           }
         }
       },
