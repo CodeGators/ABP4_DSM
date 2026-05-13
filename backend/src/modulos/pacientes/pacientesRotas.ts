@@ -12,6 +12,7 @@ export function criarPacientesRotas(
 
   rotas.get('/', controlador.listar);
   rotas.post('/', controlador.criar);
+  rotas.get('/meus', controlador.listarMeus);
   rotas.get('/:id', controlador.buscarPorId);
   rotas.put('/:id', controlador.atualizar);
   rotas.delete('/:id', controlador.remover);

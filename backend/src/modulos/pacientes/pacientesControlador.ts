@@ -1,25 +1,38 @@
 import type { Request, RequestHandler, Response } from 'express';
 
 import { ErroHttp } from '../../erros/ErroHttp.js';
-import type { PacientesServicoContrato } from './pacientesTipos.js';
+import type { RequestAutenticada } from '../../middlewares/autenticacao.js';
+import type {
+  ContextoUsuarioPaciente,
+  PacientesServicoContrato
+} from './pacientesTipos.js';
 
 export class PacientesControlador {
   constructor(private readonly servico: PacientesServicoContrato) {}
 
-  public listar: RequestHandler = async (_req: Request, res: Response) => {
-    const pacientes = await this.servico.listar();
+  public listar: RequestHandler = async (req: Request, res: Response) => {
+    const pacientes = await this.servico.listar(this.obterContexto(req));
+
+    res.status(200).json(pacientes);
+  };
+
+  public listarMeus: RequestHandler = async (req: Request, res: Response) => {
+    const pacientes = await this.servico.listarMeus(this.obterContexto(req));
 
     res.status(200).json(pacientes);
   };
 
   public buscarPorId: RequestHandler = async (req: Request, res: Response) => {
-    const paciente = await this.servico.buscarPorId(this.obterPacienteId(req));
+    const paciente = await this.servico.buscarPorId(
+      this.obterPacienteId(req),
+      this.obterContexto(req)
+    );
 
     res.status(200).json(paciente);
   };
 
   public criar: RequestHandler = async (req: Request, res: Response) => {
-    const paciente = await this.servico.criar(req.body);
+    const paciente = await this.servico.criar(req.body, this.obterContexto(req));
 
     res.status(201).json(paciente);
   };
@@ -27,14 +40,15 @@ export class PacientesControlador {
   public atualizar: RequestHandler = async (req: Request, res: Response) => {
     const paciente = await this.servico.atualizar(
       this.obterPacienteId(req),
-      req.body
+      req.body,
+      this.obterContexto(req)
     );
 
     res.status(200).json(paciente);
   };
 
   public remover: RequestHandler = async (req: Request, res: Response) => {
-    await this.servico.remover(this.obterPacienteId(req));
+    await this.servico.remover(this.obterPacienteId(req), this.obterContexto(req));
 
     res.status(204).send();
   };
@@ -44,7 +58,8 @@ export class PacientesControlador {
     res: Response
   ) => {
     const responsaveis = await this.servico.listarResponsaveis(
-      this.obterPacienteId(req)
+      this.obterPacienteId(req),
+      this.obterContexto(req)
     );
 
     res.status(200).json(responsaveis);
@@ -56,7 +71,8 @@ export class PacientesControlador {
   ) => {
     const vinculo = await this.servico.vincularResponsavel(
       this.obterPacienteId(req),
-      req.body
+      req.body,
+      this.obterContexto(req)
     );
 
     res.status(201).json(vinculo);
@@ -68,7 +84,8 @@ export class PacientesControlador {
   ) => {
     await this.servico.removerResponsavel(
       this.obterPacienteId(req),
-      this.obterResponsavelId(req)
+      this.obterResponsavelId(req),
+      this.obterContexto(req)
     );
 
     res.status(204).send();
@@ -93,5 +110,18 @@ export class PacientesControlador {
     }
 
     return responsavelId;
+  }
+
+  private obterContexto(req: Request): ContextoUsuarioPaciente | undefined {
+    const usuario = (req as RequestAutenticada).usuario;
+
+    if (!usuario) {
+      return undefined;
+    }
+
+    return {
+      id: usuario.sub,
+      tipo: usuario.tipo
+    };
   }
 }

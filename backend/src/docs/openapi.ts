@@ -314,7 +314,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Lista pacientes ativos',
         description:
-          'Retorna os pacientes ativos cadastrados. Cada paciente pode ter um usuario proprio, mas isso e opcional.',
+          'Retorna pacientes ativos. Administrador ve todos. Responsavel ve apenas pacientes vinculados a ele pela tabela de vinculos paciente-responsavel.',
         responses: {
           '200': {
             description: 'Lista de pacientes',
@@ -333,7 +333,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Cadastra um paciente',
         description:
-          'Cria o cadastro do paciente que recebera os medicamentos. `usuarioId` e opcional e so deve apontar para usuario do tipo paciente.',
+          'Cria o cadastro do paciente que recebera os medicamentos. Se quem criou for um usuario responsavel, o backend vincula automaticamente esse paciente ao responsavel logado. `usuarioId` e opcional e so deve apontar para usuario do tipo paciente quando o proprio paciente tambem tiver login.',
         requestBody: {
           required: true,
           content: {
@@ -370,8 +370,32 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
           '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/pacientes/meus': {
+      get: {
+        tags: ['Pacientes'],
+        summary: 'Lista meus pacientes',
+        description:
+          'Rota principal para o app do responsavel. Retorna somente os pacientes vinculados ao usuario logado. Exemplo: uma mae responsavel por tres filhos ve apenas esses tres pacientes. Administrador pode usar GET /pacientes para ver todos.',
+        responses: {
+          '200': {
+            description: 'Lista de pacientes vinculados ao usuario logado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Paciente' }
+                }
+              }
+            }
+          },
+          '401': { $ref: '#/components/responses/ErroNaoAutorizado' },
+          '403': { $ref: '#/components/responses/ErroPermissao' }
         }
       }
     },
@@ -379,6 +403,8 @@ export const openApiDocument = {
       get: {
         tags: ['Pacientes'],
         summary: 'Busca um paciente pelo id',
+        description:
+          'Administrador pode buscar qualquer paciente ativo. Responsavel so consegue buscar paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         responses: {
           '200': {
@@ -389,6 +415,7 @@ export const openApiDocument = {
               }
             }
           },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       },
@@ -396,7 +423,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Atualiza um paciente',
         description:
-          'Atualiza dados cadastrais do paciente. Envie apenas os campos que deseja alterar.',
+          'Atualiza dados cadastrais do paciente. Envie apenas os campos que deseja alterar. Responsavel so consegue atualizar paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         requestBody: {
           required: true,
@@ -420,6 +447,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
           '409': { $ref: '#/components/responses/ErroConflito' }
         }
@@ -428,10 +456,11 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Remove um paciente',
         description:
-          'Faz remocao logica do paciente, alterando `ativo` para false.',
+          'Faz remocao logica do paciente, alterando `ativo` para false. Responsavel so consegue remover paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         responses: {
           '204': { description: 'Paciente removido sem corpo de resposta' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -441,7 +470,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Lista responsaveis de um paciente',
         description:
-          'Mostra quais usuarios do tipo responsavel estao vinculados ao paciente.',
+          'Mostra quais usuarios do tipo responsavel estao vinculados ao paciente. Responsavel so consegue consultar vinculos de paciente que tambem esteja vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
         responses: {
           '200': {
@@ -455,6 +484,7 @@ export const openApiDocument = {
               }
             }
           },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       },
@@ -462,7 +492,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Vincula responsavel ao paciente',
         description:
-          'Liga um usuario do tipo `responsavel` ao paciente. Esse vinculo prepara quem podera receber notificacoes no futuro.',
+          'Liga um usuario do tipo `responsavel` ao paciente. Esse vinculo define quais responsaveis podem acompanhar o paciente e receber notificacoes. Responsavel so consegue adicionar vinculo em paciente que ja esteja vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
         requestBody: {
           required: true,
@@ -487,6 +517,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -496,13 +527,14 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Remove responsavel do paciente',
         description:
-          'Remove logicamente o vinculo entre paciente e responsavel. O usuario responsavel nao e apagado.',
+          'Remove logicamente o vinculo entre paciente e responsavel. O usuario responsavel nao e apagado. Responsavel so consegue remover vinculo em paciente que ja esteja vinculado a ele.',
         parameters: [
           { $ref: '#/components/parameters/PacienteIdNaRota' },
           { $ref: '#/components/parameters/ResponsavelId' }
         ],
         responses: {
           '204': { description: 'Vinculo removido sem corpo de resposta' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }

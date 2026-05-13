@@ -8,6 +8,7 @@ import { ErroHttp } from '../../erros/ErroHttp.js';
 import type {
   AtualizarPacienteEntrada,
   CriarPacienteEntrada,
+  ContextoUsuarioPaciente,
   PacienteNormalizado,
   PacientesServicoContrato,
   VincularResponsavelEntrada,
@@ -26,14 +27,36 @@ export class PacientesServico implements PacientesServicoContrato {
     private readonly pacientesResponsaveisRepositorio: Repository<PacienteResponsavel>
   ) {}
 
-  public async listar(): Promise<Paciente[]> {
+  public async listar(
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<Paciente[]> {
+    if (contexto?.tipo === 'responsavel') {
+      return this.listarPorResponsavel(contexto.id);
+    }
+
+    if (contexto?.tipo === 'paciente') {
+      return this.pacientesRepositorio.find({
+        where: { usuarioId: contexto.id, ativo: true },
+        order: { nome: 'ASC' }
+      });
+    }
+
     return this.pacientesRepositorio.find({
       where: { ativo: true },
       order: { nome: 'ASC' }
     });
   }
 
-  public async buscarPorId(id: string): Promise<Paciente> {
+  public async listarMeus(
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<Paciente[]> {
+    return this.listar(contexto);
+  }
+
+  public async buscarPorId(
+    id: string,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<Paciente> {
     const paciente = await this.pacientesRepositorio.findOne({
       where: { id, ativo: true }
     });
@@ -42,23 +65,42 @@ export class PacientesServico implements PacientesServicoContrato {
       throw new ErroHttp(404, 'Paciente nao encontrado');
     }
 
+    await this.garantirAcessoPaciente(paciente, contexto);
+
     return paciente;
   }
 
-  public async criar(entrada: CriarPacienteEntrada): Promise<Paciente> {
+  public async criar(
+    entrada: CriarPacienteEntrada,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<Paciente> {
     const dados = await this.normalizarPaciente(entrada);
     await this.validarUsuarioPaciente(dados.usuarioId);
 
     const paciente = this.pacientesRepositorio.create(dados);
 
-    return this.pacientesRepositorio.save(paciente);
+    const pacienteSalvo = await this.pacientesRepositorio.save(paciente);
+
+    if (contexto?.tipo === 'responsavel') {
+      await this.validarUsuarioResponsavel(contexto.id);
+      await this.salvarVinculoResponsavel({
+        pacienteId: pacienteSalvo.id,
+        responsavelId: contexto.id,
+        parentesco: null,
+        recebeNotificacoes: true,
+        ativo: true
+      });
+    }
+
+    return pacienteSalvo;
   }
 
   public async atualizar(
     id: string,
-    entrada: AtualizarPacienteEntrada
+    entrada: AtualizarPacienteEntrada,
+    contexto?: ContextoUsuarioPaciente
   ): Promise<Paciente> {
-    const paciente = await this.buscarPorId(id);
+    const paciente = await this.buscarPorId(id, contexto);
     const dados = await this.normalizarPaciente(entrada, paciente);
 
     await this.validarUsuarioPaciente(dados.usuarioId, paciente.id);
@@ -67,17 +109,21 @@ export class PacientesServico implements PacientesServicoContrato {
     return this.pacientesRepositorio.save(paciente);
   }
 
-  public async remover(id: string): Promise<void> {
-    const paciente = await this.buscarPorId(id);
+  public async remover(
+    id: string,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<void> {
+    const paciente = await this.buscarPorId(id, contexto);
     paciente.ativo = false;
 
     await this.pacientesRepositorio.save(paciente);
   }
 
   public async listarResponsaveis(
-    pacienteId: string
+    pacienteId: string,
+    contexto?: ContextoUsuarioPaciente
   ): Promise<PacienteResponsavel[]> {
-    await this.buscarPorId(pacienteId);
+    await this.buscarPorId(pacienteId, contexto);
 
     return this.pacientesResponsaveisRepositorio.find({
       where: { pacienteId, ativo: true },
@@ -88,10 +134,90 @@ export class PacientesServico implements PacientesServicoContrato {
 
   public async vincularResponsavel(
     pacienteId: string,
-    entrada: VincularResponsavelEntrada
+    entrada: VincularResponsavelEntrada,
+    contexto?: ContextoUsuarioPaciente
   ): Promise<PacienteResponsavel> {
-    await this.buscarPorId(pacienteId);
+    await this.buscarPorId(pacienteId, contexto);
     const dados = await this.normalizarVinculoResponsavel(pacienteId, entrada);
+
+    return this.salvarVinculoResponsavel(dados);
+  }
+
+  public async removerResponsavel(
+    pacienteId: string,
+    responsavelId: string,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<void> {
+    await this.buscarPorId(pacienteId, contexto);
+
+    const vinculo = await this.pacientesResponsaveisRepositorio.findOne({
+      where: { pacienteId, responsavelId, ativo: true }
+    });
+
+    if (!vinculo) {
+      throw new ErroHttp(404, 'Responsavel nao vinculado ao paciente');
+    }
+
+    vinculo.ativo = false;
+    await this.pacientesResponsaveisRepositorio.save(vinculo);
+  }
+
+  private async listarPorResponsavel(responsavelId: string): Promise<Paciente[]> {
+    const vinculos = await this.pacientesResponsaveisRepositorio.find({
+      where: { responsavelId, ativo: true },
+      relations: { paciente: true },
+      order: { criadoEm: 'ASC' }
+    });
+
+    const pacientes = await Promise.all(
+      vinculos.map(async (vinculo) => {
+        if (vinculo.paciente?.ativo) {
+          return vinculo.paciente;
+        }
+
+        return this.pacientesRepositorio.findOne({
+          where: { id: vinculo.pacienteId, ativo: true }
+        });
+      })
+    );
+
+    return pacientes
+      .filter((paciente): paciente is Paciente => paciente !== null)
+      .sort((atual, proximo) => atual.nome.localeCompare(proximo.nome));
+  }
+
+  private async garantirAcessoPaciente(
+    paciente: Paciente,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<void> {
+    if (!contexto || contexto.tipo === 'administrador') {
+      return;
+    }
+
+    if (contexto.tipo === 'paciente' && paciente.usuarioId === contexto.id) {
+      return;
+    }
+
+    if (contexto.tipo === 'responsavel') {
+      const vinculo = await this.pacientesResponsaveisRepositorio.findOne({
+        where: {
+          pacienteId: paciente.id,
+          responsavelId: contexto.id,
+          ativo: true
+        }
+      });
+
+      if (vinculo) {
+        return;
+      }
+    }
+
+    throw new ErroHttp(403, 'Usuario sem permissao para acessar este paciente');
+  }
+
+  private async salvarVinculoResponsavel(
+    dados: VinculoResponsavelNormalizado
+  ): Promise<PacienteResponsavel> {
     const vinculoExistente = await this.pacientesResponsaveisRepositorio.findOne({
       where: {
         pacienteId: dados.pacienteId,
@@ -107,24 +233,6 @@ export class PacientesServico implements PacientesServicoContrato {
     const vinculo = this.pacientesResponsaveisRepositorio.create(dados);
 
     return this.pacientesResponsaveisRepositorio.save(vinculo);
-  }
-
-  public async removerResponsavel(
-    pacienteId: string,
-    responsavelId: string
-  ): Promise<void> {
-    await this.buscarPorId(pacienteId);
-
-    const vinculo = await this.pacientesResponsaveisRepositorio.findOne({
-      where: { pacienteId, responsavelId, ativo: true }
-    });
-
-    if (!vinculo) {
-      throw new ErroHttp(404, 'Responsavel nao vinculado ao paciente');
-    }
-
-    vinculo.ativo = false;
-    await this.pacientesResponsaveisRepositorio.save(vinculo);
   }
 
   private async normalizarPaciente(

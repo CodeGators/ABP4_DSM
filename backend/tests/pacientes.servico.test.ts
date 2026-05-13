@@ -39,6 +39,13 @@ class RepositorioPacientesMemoria {
         return false;
       }
 
+      if (
+        opcoes.where.usuarioId !== undefined &&
+        paciente.usuarioId !== opcoes.where.usuarioId
+      ) {
+        return false;
+      }
+
       return true;
     });
   }
@@ -131,6 +138,13 @@ class RepositorioPacientesResponsaveisMemoria {
       if (
         opcoes.where.pacienteId !== undefined &&
         vinculo.pacienteId !== opcoes.where.pacienteId
+      ) {
+        return false;
+      }
+
+      if (
+        opcoes.where.responsavelId !== undefined &&
+        vinculo.responsavelId !== opcoes.where.responsavelId
       ) {
         return false;
       }
@@ -235,6 +249,58 @@ describe('PacientesServico', () => {
       dataNascimento: '1950-01-01',
       observacoes: 'Usa lembrete sonoro.',
       ativo: true
+    });
+  });
+
+  it('deve vincular automaticamente paciente criado por responsavel logado', async () => {
+    const { pacientesResponsaveisRepositorio, servico } = criarServico();
+
+    const paciente = await servico.criar(
+      {
+        nome: 'Filho Paciente',
+        dataNascimento: '2018-03-10'
+      },
+      { id: 'responsavel-1', tipo: 'responsavel' }
+    );
+
+    expect(pacientesResponsaveisRepositorio.vinculos).toHaveLength(1);
+    expect(pacientesResponsaveisRepositorio.vinculos[0]).toMatchObject({
+      pacienteId: paciente.id,
+      responsavelId: 'responsavel-1',
+      recebeNotificacoes: true,
+      ativo: true
+    });
+  });
+
+  it('deve listar apenas pacientes vinculados ao responsavel', async () => {
+    const { servico } = criarServico();
+    const pacienteVinculado = await servico.criar({ nome: 'Filho Paciente' });
+    await servico.criar({ nome: 'Paciente de Outro Responsavel' });
+    await servico.vincularResponsavel(pacienteVinculado.id, {
+      responsavelId: 'responsavel-1'
+    });
+
+    const pacientes = await servico.listarMeus({
+      id: 'responsavel-1',
+      tipo: 'responsavel'
+    });
+
+    expect(pacientes).toHaveLength(1);
+    expect(pacientes[0]?.id).toBe(pacienteVinculado.id);
+  });
+
+  it('deve bloquear responsavel sem vinculo ao buscar paciente', async () => {
+    const { servico } = criarServico();
+    const paciente = await servico.criar({ nome: 'Paciente Sem Vinculo' });
+
+    await expect(
+      servico.buscarPorId(paciente.id, {
+        id: 'responsavel-1',
+        tipo: 'responsavel'
+      })
+    ).rejects.toMatchObject<Partial<ErroHttp>>({
+      statusCode: 403,
+      message: 'Usuario sem permissao para acessar este paciente'
     });
   });
 
