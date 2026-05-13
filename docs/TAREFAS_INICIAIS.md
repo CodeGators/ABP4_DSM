@@ -208,14 +208,14 @@ git switch -c feature/dispositivos-compartimentos
 
 Tarefas:
 
-- [ ] Criar entidade `Dispositivo`.
-- [ ] Criar entidade `Compartimento`.
-- [ ] Vincular dispositivo a paciente.
-- [ ] Permitir multiplos compartimentos por dispositivo.
-- [ ] Associar medicamento a compartimento.
-- [ ] Criar status de compartimento: bloqueado, liberado, aberto, erro.
-- [ ] Criar CRUD/API para dispositivos e compartimentos.
-- [ ] Criar testes.
+- [x] Criar entidade `Dispositivo`.
+- [x] Criar entidade `Compartimento`.
+- [x] Vincular dispositivo a paciente.
+- [x] Permitir multiplos compartimentos por dispositivo.
+- [x] Associar medicamento a compartimento.
+- [x] Criar status de compartimento: bloqueado, liberado, aberto, erro.
+- [x] Criar CRUD/API para dispositivos e compartimentos.
+- [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 
 ## 9. Integracao Backend com IoT

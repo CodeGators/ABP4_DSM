@@ -2,11 +2,14 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 import { AgendamentoMedicamento } from '../entidades/AgendamentoMedicamento.js';
+import { Compartimento } from '../entidades/Compartimento.js';
+import { Dispositivo } from '../entidades/Dispositivo.js';
 import { EventoMedicamento } from '../entidades/EventoMedicamento.js';
 import { Medicamento } from '../entidades/Medicamento.js';
 import { Paciente } from '../entidades/Paciente.js';
 import { PacienteResponsavel } from '../entidades/PacienteResponsavel.js';
 import { Usuario } from '../entidades/Usuario.js';
+import { CriarTabelasDispositivosCompartimentos1760000000000 } from '../database/migrations/1760000000000-CriarTabelasDispositivosCompartimentos.js';
 import { AdicionarSenhaHashUsuarios1750000000000 } from '../database/migrations/1750000000000-AdicionarSenhaHashUsuarios.js';
 import { CriarTabelasUsuariosPacientes1740000000000 } from '../database/migrations/1740000000000-CriarTabelasUsuariosPacientes.js';
 import { CriarTabelaEventosMedicamentos1730000000000 } from '../database/migrations/1730000000000-CriarTabelaEventosMedicamentos.js';
@@ -25,13 +28,16 @@ export const AppDataSource = new DataSource({
     EventoMedicamento,
     Usuario,
     Paciente,
-    PacienteResponsavel
+    PacienteResponsavel,
+    Dispositivo,
+    Compartimento
   ],
   migrations: [
     CriarTabelaMedicamentos1710000000000,
     CriarTabelaAgendamentosMedicamentos1720000000000,
     CriarTabelaEventosMedicamentos1730000000000,
     CriarTabelasUsuariosPacientes1740000000000,
-    AdicionarSenhaHashUsuarios1750000000000
+    AdicionarSenhaHashUsuarios1750000000000,
+    CriarTabelasDispositivosCompartimentos1760000000000
   ]
 });

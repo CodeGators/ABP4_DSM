@@ -9,6 +9,8 @@ import { criarAgendamentosRotas } from './modulos/agendamentos/agendamentosRotas
 import type { AgendamentosServicoContrato } from './modulos/agendamentos/agendamentosTipos.js';
 import { criarAutenticacaoRotas } from './modulos/autenticacao/autenticacaoRotas.js';
 import type { AutenticacaoServicoContrato } from './modulos/autenticacao/autenticacaoTipos.js';
+import { criarDispositivosRotas } from './modulos/dispositivos/dispositivosRotas.js';
+import type { DispositivosServicoContrato } from './modulos/dispositivos/dispositivosTipos.js';
 import { criarEventosRotas } from './modulos/eventos/eventosRotas.js';
 import type { EventosServicoContrato } from './modulos/eventos/eventosTipos.js';
 import { criarMedicamentosRotas } from './modulos/medicamentos/medicamentosRotas.js';
@@ -23,6 +25,7 @@ type CriarAppOpcoes = {
   agendamentosServico?: AgendamentosServicoContrato;
   autenticacaoAtiva?: boolean;
   autenticacaoServico?: AutenticacaoServicoContrato;
+  dispositivosServico?: DispositivosServicoContrato;
   eventosServico?: EventosServicoContrato;
   medicamentosServico?: MedicamentosServicoContrato;
   pacientesServico?: PacientesServicoContrato;
@@ -78,6 +81,11 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
     '/pacientes',
     protegerPorTipo('administrador', 'responsavel'),
     criarPacientesRotas(opcoes.pacientesServico)
+  );
+  app.use(
+    '/dispositivos',
+    protegerPorTipo('administrador', 'responsavel'),
+    criarDispositivosRotas(opcoes.dispositivosServico)
   );
 
   app.use(tratarErros);

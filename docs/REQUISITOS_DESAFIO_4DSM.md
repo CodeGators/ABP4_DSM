@@ -26,10 +26,10 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 
 | Codigo | Requisito | Situacao | Tarefas relacionadas |
 |---|---|---|---|
-| RF01 | Cadastro e configuracao de medicamentos com nome, dosagem, horarios e compartimento associado | Parcial | CRUD de medicamentos feito; falta associar compartimento/dispositivo |
+| RF01 | Cadastro e configuracao de medicamentos com nome, dosagem, horarios e compartimento associado | Parcial | CRUD de medicamentos, agendamentos e compartimentos feito; falta mobile e integracao final |
 | RF02 | Programacao de multiplos horarios, frequencia diaria e intervalos especificos | Parcial | Agendamentos feito; falta validar com banco real e mobile |
-| RF03 | Controle de compartimentos IoT | Pendente | Dispositivos e compartimentos; integracao IoT |
-| RF04 | Bloqueio de compartimentos indevidos | Pendente | Contratos de comando para IoT; regras de liberacao |
+| RF03 | Controle de compartimentos IoT | Parcial | Backend modelou dispositivos/compartimentos; falta integracao IoT |
+| RF04 | Bloqueio de compartimentos indevidos | Parcial | Backend tem status de compartimento; falta regra de liberacao e firmware |
 | RF05 | Alerta sonoro | Fora do firmware, pendente no contrato | Backend deve registrar/enviar eventos/comandos; firmware executa |
 | RF06 | Registro de retirada de medicamento | Pendente | Eventos e historico; endpoint IoT para retirada |
 | RF07 | Monitoramento de atraso na administracao | Pendente | Eventos, job de atraso e tolerancia |
@@ -61,7 +61,7 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 | Codigo | Restricao | Situacao | Tarefas relacionadas |
 |---|---|---|---|
 | RP01 | Backend em Node.js, Express e TypeScript | Feito | Backend atual segue esta stack |
-| RP02 | Integracao com dispositivo fisico com sensores/atuadores | Pendente | Integracao IoT e documentacao de contratos |
+| RP02 | Integracao com dispositivo fisico com sensores/atuadores | Parcial | Backend modelou dispositivos/compartimentos; falta contrato IoT e firmware |
 | RP03 | Comunicacao IoT por HTTP/MQTT ou equivalente | Pendente | Definir protocolo e endpoints/topicos |
 | RP04 | Aplicativo movel | Pendente | Base do mobile |
 | RP05 | Arquitetura cliente-servidor | Parcial | Backend iniciado; falta mobile e IoT integrados |

@@ -6,7 +6,9 @@ const tabelasEsperadas = [
   'eventos_medicamentos',
   'usuarios',
   'pacientes',
-  'pacientes_responsaveis'
+  'pacientes_responsaveis',
+  'dispositivos',
+  'compartimentos'
 ];
 
 async function verificarBanco(): Promise<void> {
