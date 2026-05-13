@@ -186,14 +186,14 @@ git switch -c feature/autenticacao-seguranca
 
 Tarefas:
 
-- [ ] Criar login.
-- [ ] Criar hash de senha.
-- [ ] Criar autenticacao com JWT ou estrategia equivalente.
-- [ ] Proteger rotas privadas.
-- [ ] Separar permissoes de paciente, responsavel e administrador.
-- [ ] Garantir que dados sensiveis nao sejam retornados em respostas da API.
-- [ ] Documentar variaveis de seguranca no `.env.example`.
-- [ ] Criar testes.
+- [x] Criar login.
+- [x] Criar hash de senha.
+- [x] Criar autenticacao com JWT ou estrategia equivalente.
+- [x] Proteger rotas privadas.
+- [x] Separar permissoes de paciente, responsavel e administrador.
+- [x] Garantir que dados sensiveis nao sejam retornados em respostas da API.
+- [x] Documentar variaveis de seguranca no `.env.example`.
+- [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 
 ## 8. Dispositivos e Compartimentos

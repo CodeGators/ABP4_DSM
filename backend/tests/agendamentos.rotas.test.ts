@@ -92,7 +92,7 @@ function criarServicoMock(sobrescritas: Partial<AgendamentosServicoContrato> = {
 describe('Rotas de agendamentos', () => {
   it('deve listar agendamentos com filtro opcional de medicamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ agendamentosServico: servico });
+    const app = criarApp({ agendamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get(
       '/agendamentos?medicamentoId=medicamento-1'
@@ -109,7 +109,7 @@ describe('Rotas de agendamentos', () => {
 
   it('deve criar agendamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ agendamentosServico: servico });
+    const app = criarApp({ agendamentosServico: servico, autenticacaoAtiva: false });
     const entrada = {
       medicamentoId: 'medicamento-1',
       tipo: 'intervalo',
@@ -126,7 +126,7 @@ describe('Rotas de agendamentos', () => {
 
   it('deve atualizar agendamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ agendamentosServico: servico });
+    const app = criarApp({ agendamentosServico: servico, autenticacaoAtiva: false });
     const entrada = { horarios: ['08:00', '20:00'] };
 
     const response = await request(app)
@@ -139,7 +139,7 @@ describe('Rotas de agendamentos', () => {
 
   it('deve remover agendamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ agendamentosServico: servico });
+    const app = criarApp({ agendamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).delete('/agendamentos/agendamento-1');
 
@@ -153,7 +153,7 @@ describe('Rotas de agendamentos', () => {
         throw new ErroHttp(404, 'Agendamento nao encontrado');
       }
     });
-    const app = criarApp({ agendamentosServico: servico });
+    const app = criarApp({ agendamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/agendamentos/inexistente');
 

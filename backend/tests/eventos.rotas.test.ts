@@ -71,7 +71,7 @@ function criarServicoMock(sobrescritas: Partial<EventosServicoContrato> = {}) {
 describe('Rotas de eventos', () => {
   it('deve listar historico com filtros opcionais', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ eventosServico: servico });
+    const app = criarApp({ eventosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get(
       '/eventos?medicamentoId=medicamento-1&tipo=medicamento_retirado&origem=iot'
@@ -94,7 +94,7 @@ describe('Rotas de eventos', () => {
 
   it('deve registrar evento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ eventosServico: servico });
+    const app = criarApp({ eventosServico: servico, autenticacaoAtiva: false });
     const entrada = {
       medicamentoId: 'medicamento-1',
       agendamentoId: 'agendamento-1',
@@ -112,7 +112,7 @@ describe('Rotas de eventos', () => {
 
   it('deve buscar evento pelo id', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ eventosServico: servico });
+    const app = criarApp({ eventosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/eventos/evento-1');
 
@@ -127,7 +127,7 @@ describe('Rotas de eventos', () => {
         throw new ErroHttp(404, 'Evento nao encontrado');
       }
     });
-    const app = criarApp({ eventosServico: servico });
+    const app = criarApp({ eventosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/eventos/inexistente');
 

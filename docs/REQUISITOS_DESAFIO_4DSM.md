@@ -44,7 +44,7 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 | Codigo | Requisito | Situacao | Tarefas relacionadas |
 |---|---|---|---|
 | RNF01 | Arquitetura com IoT, backend Node/TS, API REST e mobile | Parcial | Backend iniciado; mobile e integracao IoT pendentes |
-| RNF02 | Autenticacao, protecao de dados e comunicacao segura | Pendente | Autenticacao e seguranca |
+| RNF02 | Autenticacao, protecao de dados e comunicacao segura | Parcial | Backend tem login, hash de senha, JWT e permissoes; falta reforcar HTTPS/deploy e mobile |
 | RNF03 | Confiabilidade, retry e funcionamento com falhas temporarias | Pendente | Sincronizacao e retry |
 | RNF04 | Usabilidade acessivel para idosos | Pendente | Base do mobile e design acessivel |
 | RNF05 | Manutenibilidade | Em andamento | Estrutura modular ja iniciada |
@@ -76,7 +76,7 @@ Mesmo sem implementar o firmware, precisamos fornecer contratos, endpoints e doc
 ## Pendencias Principais
 
 1. Validar banco local com Docker e migrations.
-2. Criar autenticacao e integrar usuarios, pacientes e responsaveis ao mobile.
+2. Integrar autenticacao, usuarios, pacientes e responsaveis ao mobile.
 3. Modelar dispositivos e compartimentos.
 4. Criar integracao backend/IoT por HTTP ou MQTT.
 5. Registrar eventos de abertura, retirada, alerta, atraso e falha.

@@ -1,25 +1,26 @@
 import request from 'supertest';
 
 import { criarApp } from '../src/app.js';
-import type { Usuario } from '../src/entidades/Usuario.js';
+import { Usuario } from '../src/entidades/Usuario.js';
 import { ErroHttp } from '../src/erros/ErroHttp.js';
 import type { UsuariosServicoContrato } from '../src/modulos/usuarios/usuariosTipos.js';
 
 const dataFixa = new Date('2026-01-01T00:00:00.000Z');
 
 function criarUsuarioTeste(sobrescritas: Partial<Usuario> = {}): Usuario {
-  return {
+  return Object.assign(new Usuario(), {
     id: 'usuario-1',
     nome: 'Maria Responsavel',
     email: 'maria@example.com',
     telefone: '11999999999',
+    senhaHash: null,
     tipo: 'responsavel',
     recebeNotificacoes: true,
     ativo: true,
     criadoEm: dataFixa,
     atualizadoEm: dataFixa,
     ...sobrescritas
-  };
+  });
 }
 
 function criarServicoMock(sobrescritas: Partial<UsuariosServicoContrato> = {}) {
@@ -84,7 +85,7 @@ function criarServicoMock(sobrescritas: Partial<UsuariosServicoContrato> = {}) {
 describe('Rotas de usuarios', () => {
   it('deve listar usuarios com filtro opcional de tipo', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ usuariosServico: servico });
+    const app = criarApp({ usuariosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/usuarios?tipo=responsavel');
 
@@ -98,7 +99,7 @@ describe('Rotas de usuarios', () => {
 
   it('deve criar usuario', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ usuariosServico: servico });
+    const app = criarApp({ usuariosServico: servico, autenticacaoAtiva: false });
     const entrada = {
       nome: 'Maria Responsavel',
       email: 'maria@example.com',
@@ -115,7 +116,7 @@ describe('Rotas de usuarios', () => {
 
   it('deve atualizar usuario', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ usuariosServico: servico });
+    const app = criarApp({ usuariosServico: servico, autenticacaoAtiva: false });
     const entrada = { telefone: '11888888888' };
 
     const response = await request(app).put('/usuarios/usuario-1').send(entrada);
@@ -126,7 +127,7 @@ describe('Rotas de usuarios', () => {
 
   it('deve remover usuario', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ usuariosServico: servico });
+    const app = criarApp({ usuariosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).delete('/usuarios/usuario-1');
 
@@ -140,7 +141,7 @@ describe('Rotas de usuarios', () => {
         throw new ErroHttp(404, 'Usuario nao encontrado');
       }
     });
-    const app = criarApp({ usuariosServico: servico });
+    const app = criarApp({ usuariosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/usuarios/inexistente');
 
