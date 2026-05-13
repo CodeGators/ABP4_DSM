@@ -107,7 +107,7 @@ export const openApiDocument = {
         security: [],
         summary: 'Realiza login',
         description:
-          'Envia email e senha de um usuario ativo. Se estiver correto, retorna um token JWT. Para testar as outras rotas no Swagger, copie o valor de `token`, clique em Authorize e cole no campo de autorizacao.',
+          'Envia email e senha de um usuario ativo. Se estiver correto, o Swagger mostra uma resposta com o campo `token`. Copie somente o valor desse campo, clique em Authorize no topo da pagina e cole no campo de autorizacao. Depois disso, as rotas protegidas poderao ser testadas.',
         requestBody: {
           required: true,
           description:
@@ -124,10 +124,23 @@ export const openApiDocument = {
         },
         responses: {
           '200': {
-            description: 'Login realizado com sucesso',
+            description:
+              'Login realizado com sucesso. Copie o valor de `token` mostrado na resposta e cole no Authorize do Swagger.',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/LoginResposta' }
+                schema: { $ref: '#/components/schemas/LoginResposta' },
+                example: {
+                  token:
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo_de_token_jwt.assinatura',
+                  tipoToken: 'Bearer',
+                  expiraEm: '8h',
+                  usuario: {
+                    id: '9b8f2c60-1f6f-4f23-9f5a-9bb2b1110001',
+                    nome: 'Maria Responsavel',
+                    email: 'maria@example.com',
+                    tipo: 'responsavel'
+                  }
+                }
               }
             }
           },
@@ -1323,7 +1336,7 @@ export const openApiDocument = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         description:
-          'Use o token retornado em POST /auth/login. No Swagger, clique em Authorize e cole apenas o token, sem escrever Bearer antes.'
+          'Use o token retornado em POST /auth/login. No Swagger, clique em Authorize e cole apenas o valor do campo token, sem escrever Bearer antes.'
       }
     },
     parameters: {
@@ -1506,7 +1519,9 @@ export const openApiDocument = {
           token: {
             type: 'string',
             description:
-              'Token JWT. Copie este valor para o Authorize do Swagger ou envie no header Authorization como Bearer token.'
+              'Token JWT gerado pelo login. Copie este valor inteiro para o Authorize do Swagger ou envie no header Authorization como Bearer token.',
+            example:
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo_de_token_jwt.assinatura'
           },
           tipoToken: {
             type: 'string',
