@@ -74,8 +74,16 @@ export class PacientesServico implements PacientesServicoContrato {
     entrada: CriarPacienteEntrada,
     contexto?: ContextoUsuarioPaciente
   ): Promise<Paciente> {
-    const dados = await this.normalizarPaciente(entrada);
-    await this.validarUsuarioPaciente(dados.usuarioId);
+    const usuarioDoProprioPaciente = await this.obterUsuarioDoProprioPaciente(
+      entrada,
+      contexto
+    );
+    const dados = await this.normalizarPaciente(
+      entrada,
+      undefined,
+      usuarioDoProprioPaciente
+    );
+    await this.validarUsuarioVinculadoAoPaciente(dados.usuarioId);
 
     const paciente = this.pacientesRepositorio.create(dados);
 
@@ -103,7 +111,7 @@ export class PacientesServico implements PacientesServicoContrato {
     const paciente = await this.buscarPorId(id, contexto);
     const dados = await this.normalizarPaciente(entrada, paciente);
 
-    await this.validarUsuarioPaciente(dados.usuarioId, paciente.id);
+    await this.validarUsuarioVinculadoAoPaciente(dados.usuarioId, paciente.id);
     Object.assign(paciente, dados);
 
     return this.pacientesRepositorio.save(paciente);
@@ -237,19 +245,21 @@ export class PacientesServico implements PacientesServicoContrato {
 
   private async normalizarPaciente(
     entrada: CriarPacienteEntrada | AtualizarPacienteEntrada,
-    pacienteAtual?: Paciente
+    pacienteAtual?: Paciente,
+    usuarioDoProprioPaciente?: Usuario
   ): Promise<PacienteNormalizado> {
+    if (entrada.usuarioId !== undefined) {
+      throw new ErroHttp(
+        400,
+        'Campo usuarioId nao deve ser enviado. Use souEuMesmo para cadastrar o responsavel logado como paciente.'
+      );
+    }
+
     return {
-      usuarioId: this.validarTextoOpcional(
-        'usuarioId',
-        entrada.usuarioId === undefined
-          ? pacienteAtual?.usuarioId ?? null
-          : entrada.usuarioId,
-        tamanhoMaximoTexto
-      ),
+      usuarioId: usuarioDoProprioPaciente?.id ?? pacienteAtual?.usuarioId ?? null,
       nome: this.validarTextoObrigatorio(
         'nome',
-        entrada.nome ?? pacienteAtual?.nome,
+        entrada.nome ?? usuarioDoProprioPaciente?.nome ?? pacienteAtual?.nome,
         tamanhoMaximoTexto
       ),
       dataNascimento: this.validarDataOpcional(
@@ -300,7 +310,38 @@ export class PacientesServico implements PacientesServicoContrato {
     };
   }
 
-  private async validarUsuarioPaciente(
+  private async obterUsuarioDoProprioPaciente(
+    entrada: CriarPacienteEntrada,
+    contexto?: ContextoUsuarioPaciente
+  ): Promise<Usuario | undefined> {
+    const souEuMesmo = this.validarBooleanoOpcional(
+      'souEuMesmo',
+      entrada.souEuMesmo
+    );
+
+    if (!souEuMesmo) {
+      return undefined;
+    }
+
+    if (contexto?.tipo !== 'responsavel') {
+      throw new ErroHttp(
+        403,
+        'Apenas responsavel logado pode se cadastrar como paciente'
+      );
+    }
+
+    const usuario = await this.usuariosRepositorio.findOne({
+      where: { id: contexto.id, ativo: true }
+    });
+
+    if (!usuario || usuario.tipo !== 'responsavel') {
+      throw new ErroHttp(404, 'Usuario responsavel nao encontrado');
+    }
+
+    return usuario;
+  }
+
+  private async validarUsuarioVinculadoAoPaciente(
     usuarioId: string | null,
     pacienteIdAtual?: string
   ): Promise<void> {
@@ -312,8 +353,8 @@ export class PacientesServico implements PacientesServicoContrato {
       where: { id: usuarioId, ativo: true }
     });
 
-    if (!usuario || usuario.tipo !== 'paciente') {
-      throw new ErroHttp(404, 'Usuario paciente nao encontrado');
+    if (!usuario || usuario.tipo !== 'responsavel') {
+      throw new ErroHttp(404, 'Usuario responsavel nao encontrado');
     }
 
     const pacienteComUsuario = await this.pacientesRepositorio.findOne({
@@ -413,6 +454,14 @@ export class PacientesServico implements PacientesServicoContrato {
     }
 
     return valor;
+  }
+
+  private validarBooleanoOpcional(campo: string, valor: unknown): boolean {
+    if (valor === undefined || valor === null || valor === '') {
+      return false;
+    }
+
+    return this.validarBooleano(campo, valor);
   }
 }
 

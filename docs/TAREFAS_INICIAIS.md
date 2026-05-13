@@ -174,6 +174,7 @@ Tarefas:
 - [x] Criar listagem de pacientes vinculados ao responsavel logado.
 - [x] Vincular automaticamente novo paciente ao responsavel que criou.
 - [x] Restringir acesso do responsavel apenas aos pacientes vinculados a ele.
+- [x] Simplificar cadastro: pacientes ficam em `/pacientes`, e responsavel pode usar `souEuMesmo` quando tambem for paciente.
 - [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 

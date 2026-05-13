@@ -327,27 +327,27 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Cadastra um paciente',
         description:
-          'Cria o cadastro do paciente que recebera os medicamentos. Se quem criou for um usuario responsavel, o backend vincula automaticamente esse paciente ao responsavel logado. `usuarioId` e opcional e so deve apontar para usuario do tipo paciente quando o proprio paciente tambem tiver login.',
+          'Cria o cadastro do paciente que recebera os medicamentos. Paciente nao e criado em /usuarios. Se quem criou for um usuario responsavel, o backend vincula automaticamente esse paciente ao responsavel logado. Quando o responsavel tambem for o paciente, envie `souEuMesmo: true`; o backend usa o nome do responsavel logado e vincula esse usuario ao cadastro de paciente.',
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarPaciente' },
               examples: {
-                semUsuario: {
-                  summary: 'Paciente sem login proprio',
+                outroPaciente: {
+                  summary: 'Paciente acompanhado pelo responsavel',
                   value: {
                     nome: 'Joao Paciente',
                     dataNascimento: '1950-01-01',
                     observacoes: 'Prefere alertas sonoros.'
                   }
                 },
-                comUsuario: {
-                  summary: 'Paciente ligado a usuario',
+                proprioResponsavel: {
+                  summary: 'Responsavel tambem e o paciente',
                   value: {
-                    usuarioId: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444',
-                    nome: 'Joao Paciente',
-                    dataNascimento: '1950-01-01'
+                    souEuMesmo: true,
+                    dataNascimento: '1980-04-15',
+                    observacoes: 'Responsavel cuida dos proprios medicamentos.'
                   }
                 }
               }
@@ -1715,7 +1715,7 @@ export const openApiDocument = {
             nullable: true,
             format: 'uuid',
             description:
-              'Usuario do tipo paciente vinculado a este cadastro. Pode ser null.'
+              'Usuario responsavel vinculado quando o responsavel logado tambem e o paciente. Na maioria dos pacientes acompanhados por outra pessoa, fica null.'
           },
           nome: {
             type: 'string',
@@ -1741,19 +1741,12 @@ export const openApiDocument = {
       },
       CriarPaciente: {
         type: 'object',
-        required: ['nome'],
         properties: {
-          usuarioId: {
-            type: 'string',
-            nullable: true,
-            format: 'uuid',
-            description:
-              'Opcional. UUID de um usuario ativo do tipo paciente.'
-          },
           nome: {
             type: 'string',
             maxLength: 120,
-            description: 'Obrigatorio. Nome do paciente.',
+            description:
+              'Obrigatorio quando `souEuMesmo` nao for true. Nome do paciente acompanhado.',
             example: 'Joao Paciente'
           },
           dataNascimento: {
@@ -1768,19 +1761,18 @@ export const openApiDocument = {
             nullable: true,
             maxLength: 1000,
             description: 'Opcional. Observacoes gerais do cuidado.'
+          },
+          souEuMesmo: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Opcional. Use true quando o responsavel logado tambem for o paciente. Nesse caso nao envie nome nem usuarioId; o backend usa os dados do responsavel autenticado.'
           }
         }
       },
       AtualizarPaciente: {
         type: 'object',
         properties: {
-          usuarioId: {
-            type: 'string',
-            nullable: true,
-            format: 'uuid',
-            description:
-              'Opcional. Novo usuario do tipo paciente ou null para remover vinculo.'
-          },
           nome: {
             type: 'string',
             maxLength: 120,

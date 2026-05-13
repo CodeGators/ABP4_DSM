@@ -7,6 +7,7 @@ export type CriarPacienteEntrada = {
   nome?: unknown;
   dataNascimento?: unknown;
   observacoes?: unknown;
+  souEuMesmo?: unknown;
 };
 
 export type AtualizarPacienteEntrada = Partial<CriarPacienteEntrada> & {
