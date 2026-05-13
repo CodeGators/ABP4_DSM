@@ -7,6 +7,7 @@ import { Medicamento } from '../entidades/Medicamento.js';
 import { Paciente } from '../entidades/Paciente.js';
 import { PacienteResponsavel } from '../entidades/PacienteResponsavel.js';
 import { Usuario } from '../entidades/Usuario.js';
+import { AdicionarSenhaHashUsuarios1750000000000 } from '../database/migrations/1750000000000-AdicionarSenhaHashUsuarios.js';
 import { CriarTabelasUsuariosPacientes1740000000000 } from '../database/migrations/1740000000000-CriarTabelasUsuariosPacientes.js';
 import { CriarTabelaEventosMedicamentos1730000000000 } from '../database/migrations/1730000000000-CriarTabelaEventosMedicamentos.js';
 import { CriarTabelaAgendamentosMedicamentos1720000000000 } from '../database/migrations/1720000000000-CriarTabelaAgendamentosMedicamentos.js';
@@ -30,6 +31,7 @@ export const AppDataSource = new DataSource({
     CriarTabelaMedicamentos1710000000000,
     CriarTabelaAgendamentosMedicamentos1720000000000,
     CriarTabelaEventosMedicamentos1730000000000,
-    CriarTabelasUsuariosPacientes1740000000000
+    CriarTabelasUsuariosPacientes1740000000000,
+    AdicionarSenhaHashUsuarios1750000000000
   ]
 });

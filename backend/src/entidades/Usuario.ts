@@ -22,6 +22,9 @@ export class Usuario {
   @Column({ type: 'varchar', length: 30, nullable: true })
   telefone!: string | null;
 
+  @Column({ name: 'senha_hash', type: 'varchar', length: 255, nullable: true })
+  senhaHash!: string | null;
+
   @Column({ type: 'varchar', length: 30 })
   tipo!: TipoUsuario;
 
@@ -36,4 +39,11 @@ export class Usuario {
 
   @UpdateDateColumn({ name: 'atualizado_em', type: 'timestamp with time zone' })
   atualizadoEm!: Date;
+
+  public toJSON() {
+    const { senhaHash: _senhaHash, ...usuarioSemSenha } = this;
+    void _senhaHash;
+
+    return usuarioSemSenha;
+  }
 }

@@ -86,7 +86,7 @@ function criarServicoMock(
 describe('Rotas de medicamentos', () => {
   it('deve listar medicamentos', async () => {
     const { servico } = criarServicoMock();
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/medicamentos');
 
@@ -106,7 +106,7 @@ describe('Rotas de medicamentos', () => {
 
   it('deve buscar medicamento por id', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/medicamentos/medicamento-1');
 
@@ -117,7 +117,7 @@ describe('Rotas de medicamentos', () => {
 
   it('deve criar medicamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
     const entrada = {
       nome: 'Dipirona',
       dosagem: '500mg',
@@ -133,7 +133,7 @@ describe('Rotas de medicamentos', () => {
 
   it('deve atualizar medicamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
     const entrada = {
       nome: 'Dipirona gotas'
     };
@@ -148,7 +148,7 @@ describe('Rotas de medicamentos', () => {
 
   it('deve remover medicamento', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).delete('/medicamentos/medicamento-1');
 
@@ -162,7 +162,7 @@ describe('Rotas de medicamentos', () => {
         throw new ErroHttp(404, 'Medicamento nao encontrado');
       }
     });
-    const app = criarApp({ medicamentosServico: servico });
+    const app = criarApp({ medicamentosServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/medicamentos/inexistente');
 

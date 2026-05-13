@@ -3,6 +3,7 @@ import type { FindOptionsWhere, Repository } from 'typeorm';
 import { AppDataSource } from '../../config/data-source.js';
 import { Usuario, type TipoUsuario } from '../../entidades/Usuario.js';
 import { ErroHttp } from '../../erros/ErroHttp.js';
+import { gerarHashSenha, validarSenha } from '../autenticacao/senhas.js';
 import type {
   AtualizarUsuarioEntrada,
   CriarUsuarioEntrada,
@@ -92,6 +93,7 @@ export class UsuariosServico implements UsuariosServicoContrato {
         entrada.telefone ?? usuarioAtual?.telefone ?? null,
         30
       ),
+      senhaHash: await this.normalizarSenha(entrada, usuarioAtual),
       tipo: this.validarTipo(entrada.tipo ?? usuarioAtual?.tipo),
       recebeNotificacoes: this.validarBooleano(
         'recebeNotificacoes',
@@ -104,6 +106,17 @@ export class UsuariosServico implements UsuariosServicoContrato {
         (entrada as AtualizarUsuarioEntrada).ativo ?? usuarioAtual?.ativo ?? true
       )
     };
+  }
+
+  private async normalizarSenha(
+    entrada: CriarUsuarioEntrada | AtualizarUsuarioEntrada,
+    usuarioAtual?: Usuario
+  ): Promise<string | null> {
+    if (entrada.senha === undefined || entrada.senha === null || entrada.senha === '') {
+      return usuarioAtual?.senhaHash ?? null;
+    }
+
+    return gerarHashSenha(validarSenha(entrada.senha));
   }
 
   private async garantirEmailDisponivel(

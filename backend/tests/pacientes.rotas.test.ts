@@ -132,7 +132,7 @@ function criarServicoMock(sobrescritas: Partial<PacientesServicoContrato> = {}) 
 describe('Rotas de pacientes', () => {
   it('deve listar pacientes', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/pacientes');
 
@@ -146,7 +146,7 @@ describe('Rotas de pacientes', () => {
 
   it('deve criar paciente', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
     const entrada = {
       nome: 'Joao Paciente',
       dataNascimento: '1950-01-01'
@@ -160,7 +160,7 @@ describe('Rotas de pacientes', () => {
 
   it('deve vincular responsavel ao paciente', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
     const entrada = {
       responsavelId: 'responsavel-1',
       parentesco: 'Filha',
@@ -177,7 +177,7 @@ describe('Rotas de pacientes', () => {
 
   it('deve listar responsaveis do paciente', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/pacientes/paciente-1/responsaveis');
 
@@ -191,7 +191,7 @@ describe('Rotas de pacientes', () => {
 
   it('deve remover vinculo do responsavel', async () => {
     const { servico, chamadas } = criarServicoMock();
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).delete(
       '/pacientes/paciente-1/responsaveis/responsavel-1'
@@ -209,7 +209,7 @@ describe('Rotas de pacientes', () => {
         throw new ErroHttp(404, 'Paciente nao encontrado');
       }
     });
-    const app = criarApp({ pacientesServico: servico });
+    const app = criarApp({ pacientesServico: servico, autenticacaoAtiva: false });
 
     const response = await request(app).get('/pacientes/inexistente');
 

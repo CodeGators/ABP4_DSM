@@ -1,10 +1,14 @@
 import cors from 'cors';
 import express from 'express';
+import type { RequestHandler } from 'express';
 
 import { configurarSwagger } from './docs/swagger.js';
+import { autenticar, autorizar } from './middlewares/autenticacao.js';
 import { tratarErros } from './middlewares/tratarErros.js';
 import { criarAgendamentosRotas } from './modulos/agendamentos/agendamentosRotas.js';
 import type { AgendamentosServicoContrato } from './modulos/agendamentos/agendamentosTipos.js';
+import { criarAutenticacaoRotas } from './modulos/autenticacao/autenticacaoRotas.js';
+import type { AutenticacaoServicoContrato } from './modulos/autenticacao/autenticacaoTipos.js';
 import { criarEventosRotas } from './modulos/eventos/eventosRotas.js';
 import type { EventosServicoContrato } from './modulos/eventos/eventosTipos.js';
 import { criarMedicamentosRotas } from './modulos/medicamentos/medicamentosRotas.js';
@@ -13,9 +17,12 @@ import { criarPacientesRotas } from './modulos/pacientes/pacientesRotas.js';
 import type { PacientesServicoContrato } from './modulos/pacientes/pacientesTipos.js';
 import { criarUsuariosRotas } from './modulos/usuarios/usuariosRotas.js';
 import type { UsuariosServicoContrato } from './modulos/usuarios/usuariosTipos.js';
+import type { TipoUsuario } from './entidades/Usuario.js';
 
 type CriarAppOpcoes = {
   agendamentosServico?: AgendamentosServicoContrato;
+  autenticacaoAtiva?: boolean;
+  autenticacaoServico?: AutenticacaoServicoContrato;
   eventosServico?: EventosServicoContrato;
   medicamentosServico?: MedicamentosServicoContrato;
   pacientesServico?: PacientesServicoContrato;
@@ -24,6 +31,9 @@ type CriarAppOpcoes = {
 
 export function criarApp(opcoes: CriarAppOpcoes = {}) {
   const app = express();
+  const autenticacaoAtiva = opcoes.autenticacaoAtiva !== false;
+  const protegerPorTipo = (...tipos: TipoUsuario[]): RequestHandler =>
+    autenticacaoAtiva ? autorizar(...tipos) : (_req, _res, next) => next();
 
   app.use(cors());
   app.use(express.json());
@@ -38,17 +48,37 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
     res.status(200).json({ status: 'ok' });
   });
 
+  app.use('/auth', criarAutenticacaoRotas(opcoes.autenticacaoServico));
+
+  if (autenticacaoAtiva) {
+    app.use(autenticar);
+  }
+
   app.use(
     '/medicamentos',
+    protegerPorTipo('administrador', 'responsavel'),
     criarMedicamentosRotas(opcoes.medicamentosServico)
   );
   app.use(
     '/agendamentos',
+    protegerPorTipo('administrador', 'responsavel'),
     criarAgendamentosRotas(opcoes.agendamentosServico)
   );
-  app.use('/eventos', criarEventosRotas(opcoes.eventosServico));
-  app.use('/usuarios', criarUsuariosRotas(opcoes.usuariosServico));
-  app.use('/pacientes', criarPacientesRotas(opcoes.pacientesServico));
+  app.use(
+    '/eventos',
+    protegerPorTipo('administrador', 'responsavel'),
+    criarEventosRotas(opcoes.eventosServico)
+  );
+  app.use(
+    '/usuarios',
+    protegerPorTipo('administrador'),
+    criarUsuariosRotas(opcoes.usuariosServico)
+  );
+  app.use(
+    '/pacientes',
+    protegerPorTipo('administrador', 'responsavel'),
+    criarPacientesRotas(opcoes.pacientesServico)
+  );
 
   app.use(tratarErros);
 

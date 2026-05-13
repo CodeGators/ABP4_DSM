@@ -12,11 +12,17 @@ export const openApiDocument = {
       description: 'Ambiente local de desenvolvimento'
     }
   ],
+  security: [{ bearerAuth: [] }],
   tags: [
     {
       name: 'Saude',
       description:
         'Rotas simples para verificar se a API esta ligada e respondendo.'
+    },
+    {
+      name: 'Autenticacao',
+      description:
+        'Login e uso do token JWT. Primeiro faca login, copie o token retornado e clique em Authorize no Swagger usando Bearer token.'
     },
     {
       name: 'Usuarios',
@@ -48,6 +54,7 @@ export const openApiDocument = {
     '/health': {
       get: {
         tags: ['Saude'],
+        security: [],
         summary: 'Verifica se a API esta online',
         description:
           'Use esta rota para confirmar rapidamente se o backend subiu. Se retornar status 200 com `{ "status": "ok" }`, a API esta respondendo.',
@@ -67,6 +74,7 @@ export const openApiDocument = {
     '/saude': {
       get: {
         tags: ['Saude'],
+        security: [],
         summary: 'Verifica se a API esta online em rota em portugues',
         description:
           'Tem o mesmo objetivo de `/health`, mas usando nome em portugues. Pode ser usada pelo app e pelo time durante testes.',
@@ -80,6 +88,41 @@ export const openApiDocument = {
               }
             }
           }
+        }
+      }
+    },
+    '/auth/login': {
+      post: {
+        tags: ['Autenticacao'],
+        security: [],
+        summary: 'Realiza login',
+        description:
+          'Envia email e senha de um usuario ativo. Se estiver correto, retorna um token JWT. Para testar as outras rotas no Swagger, copie o valor de `token`, clique em Authorize e cole no campo de autorizacao.',
+        requestBody: {
+          required: true,
+          description:
+            '`email` e `senha` sao obrigatorios. A senha precisa ter sido cadastrada no usuario.',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Login' },
+              example: {
+                email: 'admin@example.com',
+                senha: 'senha-segura'
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Login realizado com sucesso',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/LoginResposta' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '401': { $ref: '#/components/responses/ErroNaoAutorizado' }
         }
       }
     },
@@ -919,6 +962,15 @@ export const openApiDocument = {
     }
   },
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description:
+          'Use o token retornado em POST /auth/login. No Swagger, clique em Authorize e cole apenas o token, sem escrever Bearer antes.'
+      }
+    },
     parameters: {
       UsuarioId: {
         name: 'id',
@@ -996,6 +1048,16 @@ export const openApiDocument = {
           }
         }
       },
+      ErroNaoAutorizado: {
+        description:
+          'Usuario nao autenticado, token ausente, token invalido ou credenciais incorretas.',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Erro' },
+            example: { mensagem: 'Email ou senha invalidos' }
+          }
+        }
+      },
       ErroConflito: {
         description:
           'Conflito com um registro existente, como email ja cadastrado ou usuario ja vinculado a outro paciente.',
@@ -1025,6 +1087,56 @@ export const openApiDocument = {
             type: 'string',
             description: 'Texto explicando o erro em portugues.',
             example: 'Campo nome e obrigatorio'
+          }
+        }
+      },
+      Login: {
+        type: 'object',
+        required: ['email', 'senha'],
+        properties: {
+          email: {
+            type: 'string',
+            format: 'email',
+            description: 'Email do usuario cadastrado.',
+            example: 'admin@example.com'
+          },
+          senha: {
+            type: 'string',
+            format: 'password',
+            minLength: 8,
+            description: 'Senha do usuario. Nunca envie ou salve senha em texto fora do login.',
+            example: 'senha-segura'
+          }
+        }
+      },
+      LoginResposta: {
+        type: 'object',
+        properties: {
+          token: {
+            type: 'string',
+            description:
+              'Token JWT. Copie este valor para o Authorize do Swagger ou envie no header Authorization como Bearer token.'
+          },
+          tipoToken: {
+            type: 'string',
+            example: 'Bearer'
+          },
+          expiraEm: {
+            type: 'string',
+            description: 'Tempo de validade configurado para o token.',
+            example: '8h'
+          },
+          usuario: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              nome: { type: 'string', example: 'Admin' },
+              email: { type: 'string', format: 'email' },
+              tipo: {
+                type: 'string',
+                enum: ['paciente', 'responsavel', 'administrador']
+              }
+            }
           }
         }
       },
@@ -1094,6 +1206,13 @@ export const openApiDocument = {
             description: 'Opcional. Telefone para contato.',
             example: '11999999999'
           },
+          senha: {
+            type: 'string',
+            format: 'password',
+            minLength: 8,
+            description:
+              'Opcional. Senha inicial do usuario. O backend salva apenas o hash, nunca a senha em texto.'
+          },
           tipo: {
             type: 'string',
             enum: ['paciente', 'responsavel', 'administrador'],
@@ -1127,6 +1246,13 @@ export const openApiDocument = {
             nullable: true,
             maxLength: 30,
             description: 'Opcional. Novo telefone.'
+          },
+          senha: {
+            type: 'string',
+            format: 'password',
+            minLength: 8,
+            description:
+              'Opcional. Nova senha. O backend gera um novo hash.'
           },
           tipo: {
             type: 'string',

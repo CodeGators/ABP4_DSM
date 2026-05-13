@@ -4,6 +4,7 @@ export type CriarUsuarioEntrada = {
   nome?: unknown;
   email?: unknown;
   telefone?: unknown;
+  senha?: unknown;
   tipo?: unknown;
   recebeNotificacoes?: unknown;
 };
@@ -20,6 +21,7 @@ export type UsuarioNormalizado = {
   nome: string;
   email: string;
   telefone: string | null;
+  senhaHash: string | null;
   tipo: TipoUsuario;
   recebeNotificacoes: boolean;
   ativo: boolean;
