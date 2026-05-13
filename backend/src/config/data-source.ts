@@ -6,9 +6,11 @@ import { Compartimento } from '../entidades/Compartimento.js';
 import { Dispositivo } from '../entidades/Dispositivo.js';
 import { EventoMedicamento } from '../entidades/EventoMedicamento.js';
 import { Medicamento } from '../entidades/Medicamento.js';
+import { Notificacao } from '../entidades/Notificacao.js';
 import { Paciente } from '../entidades/Paciente.js';
 import { PacienteResponsavel } from '../entidades/PacienteResponsavel.js';
 import { Usuario } from '../entidades/Usuario.js';
+import { CriarTabelaNotificacoes1770000000000 } from '../database/migrations/1770000000000-CriarTabelaNotificacoes.js';
 import { CriarTabelasDispositivosCompartimentos1760000000000 } from '../database/migrations/1760000000000-CriarTabelasDispositivosCompartimentos.js';
 import { AdicionarSenhaHashUsuarios1750000000000 } from '../database/migrations/1750000000000-AdicionarSenhaHashUsuarios.js';
 import { CriarTabelasUsuariosPacientes1740000000000 } from '../database/migrations/1740000000000-CriarTabelasUsuariosPacientes.js';
@@ -30,7 +32,8 @@ export const AppDataSource = new DataSource({
     Paciente,
     PacienteResponsavel,
     Dispositivo,
-    Compartimento
+    Compartimento,
+    Notificacao
   ],
   migrations: [
     CriarTabelaMedicamentos1710000000000,
@@ -38,6 +41,7 @@ export const AppDataSource = new DataSource({
     CriarTabelaEventosMedicamentos1730000000000,
     CriarTabelasUsuariosPacientes1740000000000,
     AdicionarSenhaHashUsuarios1750000000000,
-    CriarTabelasDispositivosCompartimentos1760000000000
+    CriarTabelasDispositivosCompartimentos1760000000000,
+    CriarTabelaNotificacoes1770000000000
   ]
 });

@@ -255,14 +255,14 @@ git switch -c feature/notificacoes-atrasos
 
 Tarefas:
 
-- [ ] Criar regra de tolerancia por agendamento.
-- [ ] Detectar medicamento nao retirado dentro do tempo esperado.
-- [ ] Registrar evento de atraso.
-- [ ] Criar entidade/camada de notificacoes.
-- [ ] Enviar notificacao para responsaveis cadastrados.
-- [ ] Criar historico de notificacoes enviadas.
-- [ ] Preparar integracao com push notification no mobile.
-- [ ] Criar testes.
+- [x] Criar regra de tolerancia por agendamento.
+- [x] Detectar medicamento nao retirado dentro do tempo esperado.
+- [x] Registrar evento de atraso.
+- [x] Criar entidade/camada de notificacoes.
+- [x] Enviar notificacao para responsaveis cadastrados.
+- [x] Criar historico de notificacoes enviadas.
+- [x] Preparar integracao com push notification no mobile.
+- [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 
 ## 11. Sincronizacao, Confiabilidade e Retry

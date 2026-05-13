@@ -16,6 +16,7 @@ describe('Documentacao da API', () => {
     expect(response.body.paths).toHaveProperty('/usuarios');
     expect(response.body.paths).toHaveProperty('/pacientes');
     expect(response.body.paths).toHaveProperty('/dispositivos');
+    expect(response.body.paths).toHaveProperty('/notificacoes');
     expect(response.body.paths).toHaveProperty('/auth/login');
     expect(response.body.paths).toHaveProperty('/medicamentos');
     expect(response.body.paths).toHaveProperty('/agendamentos');
@@ -25,6 +26,7 @@ describe('Documentacao da API', () => {
         expect.objectContaining({ name: 'Usuarios' }),
         expect.objectContaining({ name: 'Pacientes' }),
         expect.objectContaining({ name: 'Dispositivos' }),
+        expect.objectContaining({ name: 'Notificacoes' }),
         expect.objectContaining({ name: 'Autenticacao' }),
         expect.objectContaining({ name: 'Medicamentos' }),
         expect.objectContaining({ name: 'Agendamentos' }),
