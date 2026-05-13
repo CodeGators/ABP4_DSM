@@ -134,12 +134,12 @@ describe('UsuariosServico', () => {
       email: 'maria@example.com',
       tipo: 'responsavel'
     });
-    const paciente = await servico.criar({
-      nome: 'Joao',
-      email: 'joao@example.com',
-      tipo: 'paciente'
+    const administrador = await servico.criar({
+      nome: 'Admin',
+      email: 'admin@example.com',
+      tipo: 'administrador'
     });
-    await servico.remover(paciente.id);
+    await servico.remover(administrador.id);
 
     const usuarios = await servico.listar({ tipo: 'responsavel' });
 
@@ -177,6 +177,21 @@ describe('UsuariosServico', () => {
       })
     ).rejects.toMatchObject<Partial<ErroHttp>>({
       statusCode: 400
+    });
+  });
+
+  it('deve rejeitar cadastro de paciente em usuarios', async () => {
+    const { servico } = criarServico();
+
+    await expect(
+      servico.criar({
+        nome: 'Joao Paciente',
+        email: 'joao@example.com',
+        tipo: 'paciente'
+      })
+    ).rejects.toMatchObject<Partial<ErroHttp>>({
+      statusCode: 400,
+      message: 'Campo tipo deve ser um destes valores: responsavel, administrador'
     });
   });
 });

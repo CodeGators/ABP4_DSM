@@ -27,7 +27,7 @@ export const openApiDocument = {
     {
       name: 'Usuarios',
       description:
-        'Cadastro de pessoas que usam o sistema: paciente, responsavel ou administrador. Usuarios podem ter senha para login via autenticacao.'
+        'Cadastro de contas que acessam o sistema: responsavel ou administrador. O cadastro de pacientes fica em Pacientes.'
     },
     {
       name: 'Pacientes',
@@ -161,10 +161,10 @@ export const openApiDocument = {
             in: 'query',
             required: false,
             description:
-              'Opcional. Valores aceitos: paciente, responsavel ou administrador.',
+              'Opcional. Valores aceitos: responsavel ou administrador.',
             schema: {
               type: 'string',
-              enum: ['paciente', 'responsavel', 'administrador']
+              enum: ['responsavel', 'administrador']
             },
             example: 'responsavel'
           }
@@ -189,11 +189,11 @@ export const openApiDocument = {
         security: [],
         summary: 'Cadastra uma conta pelo app',
         description:
-          'Rota publica para o fluxo inicial do app: baixar o app, clicar em criar conta e preencher os dados. Para esse usuario conseguir entrar no app ou no sistema, envie tambem o campo `senha`. Se a senha nao for enviada, o usuario fica cadastrado, mas nao consegue fazer login ate receber uma senha em uma atualizacao futura. Por seguranca, o cadastro publico nao cria usuario administrador.',
+          'Rota publica para o fluxo inicial do app: baixar o app, clicar em criar conta e preencher os dados. Esta rota cadastra apenas contas de `responsavel` ou `administrador`. No cadastro publico use `responsavel`; `administrador` deve ser criado por outro administrador autenticado. O paciente deve ser cadastrado depois em `/pacientes`.',
         requestBody: {
           required: true,
           description:
-            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais. Use `responsavel` para quem vai acessar o app e cuidar de um paciente. Use `paciente` quando o proprio paciente vai ter login. Nao use `administrador` no cadastro publico.',
+            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais. Use `responsavel` para quem vai acessar o app e cuidar de um paciente. Use `administrador` apenas em cadastro feito por administrador autenticado.',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarUsuario' },
@@ -209,21 +209,15 @@ export const openApiDocument = {
                     recebeNotificacoes: true
                   }
                 },
-                paciente: {
-                  summary: 'Paciente com login proprio',
+                administrador: {
+                  summary: 'Administrador criado por outro admin',
                   value: {
-                    nome: 'Joao Paciente',
-                    email: 'joao@example.com',
+                    nome: 'Admin PillGator',
+                    email: 'admin@example.com',
+                    telefone: '11999999999',
                     senha: 'senha-segura',
-                    tipo: 'paciente'
-                  }
-                },
-                pacienteSemLogin: {
-                  summary: 'Paciente sem login proprio',
-                  value: {
-                    nome: 'Ana Paciente',
-                    email: 'ana@example.com',
-                    tipo: 'paciente'
+                    tipo: 'administrador',
+                    recebeNotificacoes: false
                   }
                 }
               }
@@ -1572,7 +1566,7 @@ export const openApiDocument = {
               email: { type: 'string', format: 'email' },
               tipo: {
                 type: 'string',
-                enum: ['paciente', 'responsavel', 'administrador']
+                enum: ['responsavel', 'administrador']
               }
             }
           }
@@ -1606,9 +1600,9 @@ export const openApiDocument = {
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
+            enum: ['responsavel', 'administrador'],
             description:
-              'Papel do usuario dentro do sistema.'
+              'Papel da conta dentro do sistema. Pacientes sao cadastrados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',
@@ -1653,9 +1647,9 @@ export const openApiDocument = {
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
+            enum: ['responsavel', 'administrador'],
             description:
-              'Obrigatorio. Use paciente para quem toma medicamentos, responsavel para cuidador/familiar e administrador para gestao.'
+              'Obrigatorio. Use responsavel para cuidador/familiar que acessa o app e administrador para gestao. Pacientes sao cadastrados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',
@@ -1694,8 +1688,9 @@ export const openApiDocument = {
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
-            description: 'Opcional. Novo papel do usuario.'
+            enum: ['responsavel', 'administrador'],
+            description:
+              'Opcional. Novo papel da conta. Pacientes sao alterados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',

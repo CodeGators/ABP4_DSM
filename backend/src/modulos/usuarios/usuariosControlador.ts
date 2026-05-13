@@ -44,6 +44,13 @@ export class UsuariosControlador {
       );
     }
 
+    if (req.body?.tipo !== 'responsavel') {
+      throw new ErroHttp(
+        400,
+        'Cadastro publico aceita apenas usuario responsavel'
+      );
+    }
+
     const usuario = await this.servico.criar(req.body);
 
     res.status(201).json(usuario);

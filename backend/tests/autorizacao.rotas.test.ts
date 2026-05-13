@@ -73,6 +73,25 @@ describe('Autorizacao das rotas privadas', () => {
     });
   });
 
+  it('deve bloquear cadastro de paciente em usuarios', async () => {
+    const usuario = criarUsuario('responsavel');
+    const app = criarApp({
+      usuariosServico: criarUsuariosServicoMock(usuario)
+    });
+
+    const response = await request(app).post('/usuarios').send({
+      nome: 'Joao Paciente',
+      email: 'joao@example.com',
+      senha: 'senha-segura',
+      tipo: 'paciente'
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      mensagem: 'Cadastro publico aceita apenas usuario responsavel'
+    });
+  });
+
   it('deve bloquear rota privada sem token', async () => {
     const app = criarApp();
 
