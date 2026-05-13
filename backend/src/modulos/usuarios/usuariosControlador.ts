@@ -1,4 +1,4 @@
-import type { Request, RequestHandler, Response } from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { ErroHttp } from '../../erros/ErroHttp.js';
 import type {
@@ -22,6 +22,28 @@ export class UsuariosControlador {
   };
 
   public criar: RequestHandler = async (req: Request, res: Response) => {
+    const usuario = await this.servico.criar(req.body);
+
+    res.status(201).json(usuario);
+  };
+
+  public criarCadastroPublico: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (req.body?.tipo === 'administrador') {
+      if (req.headers.authorization?.startsWith('Bearer ')) {
+        next();
+        return;
+      }
+
+      throw new ErroHttp(
+        403,
+        'Cadastro publico nao pode criar usuario administrador'
+      );
+    }
+
     const usuario = await this.servico.criar(req.body);
 
     res.status(201).json(usuario);

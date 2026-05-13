@@ -173,13 +173,14 @@ export const openApiDocument = {
       },
       post: {
         tags: ['Usuarios'],
-        summary: 'Cadastra um usuario',
+        security: [],
+        summary: 'Cadastra uma conta pelo app',
         description:
-          'Cria uma pessoa no sistema. Para esse usuario conseguir entrar no app ou no sistema, envie tambem o campo `senha`. Se a senha nao for enviada, o usuario fica cadastrado, mas nao consegue fazer login ate receber uma senha em uma atualizacao futura.',
+          'Rota publica para o fluxo inicial do app: baixar o app, clicar em criar conta e preencher os dados. Para esse usuario conseguir entrar no app ou no sistema, envie tambem o campo `senha`. Se a senha nao for enviada, o usuario fica cadastrado, mas nao consegue fazer login ate receber uma senha em uma atualizacao futura. Por seguranca, o cadastro publico nao cria usuario administrador.',
         requestBody: {
           required: true,
           description:
-            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais.',
+            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais. Use `responsavel` para quem vai acessar o app e cuidar de um paciente. Use `paciente` quando o proprio paciente vai ter login. Nao use `administrador` no cadastro publico.',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarUsuario' },
@@ -226,6 +227,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '409': { $ref: '#/components/responses/ErroConflito' }
         }
       }
@@ -1432,6 +1434,18 @@ export const openApiDocument = {
           'application/json': {
             schema: { $ref: '#/components/schemas/Erro' },
             example: { mensagem: 'Email ou senha invalidos' }
+          }
+        }
+      },
+      ErroPermissao: {
+        description:
+          'Usuario autenticado sem permissao ou tentativa de fazer uma acao nao permitida no cadastro publico.',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Erro' },
+            example: {
+              mensagem: 'Cadastro publico nao pode criar usuario administrador'
+            }
           }
         }
       },

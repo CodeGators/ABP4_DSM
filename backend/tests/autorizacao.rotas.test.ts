@@ -38,6 +38,41 @@ function criarUsuariosServicoMock(usuario: Usuario): UsuariosServicoContrato {
 }
 
 describe('Autorizacao das rotas privadas', () => {
+  it('deve permitir cadastro publico de usuario sem token', async () => {
+    const usuario = criarUsuario('responsavel');
+    const app = criarApp({
+      usuariosServico: criarUsuariosServicoMock(usuario)
+    });
+
+    const response = await request(app).post('/usuarios').send({
+      nome: 'Maria Responsavel',
+      email: 'maria@example.com',
+      senha: 'senha-segura',
+      tipo: 'responsavel'
+    });
+
+    expect(response.status).toBe(201);
+  });
+
+  it('deve bloquear cadastro publico de administrador sem token', async () => {
+    const usuario = criarUsuario('administrador');
+    const app = criarApp({
+      usuariosServico: criarUsuariosServicoMock(usuario)
+    });
+
+    const response = await request(app).post('/usuarios').send({
+      nome: 'Admin',
+      email: 'admin@example.com',
+      senha: 'senha-segura',
+      tipo: 'administrador'
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({
+      mensagem: 'Cadastro publico nao pode criar usuario administrador'
+    });
+  });
+
   it('deve bloquear rota privada sem token', async () => {
     const app = criarApp();
 
@@ -64,6 +99,28 @@ describe('Autorizacao das rotas privadas', () => {
 
     expect(response.status).not.toBe(401);
     expect(response.status).not.toBe(403);
+  });
+
+  it('deve permitir administrador criar outro administrador com token', async () => {
+    const usuario = criarUsuario('administrador');
+    const autenticacaoServico = criarAutenticacaoServico();
+    const app = criarApp({
+      autenticacaoServico,
+      usuariosServico: criarUsuariosServicoMock(usuario)
+    });
+    const token = autenticacaoServico.gerarToken(usuario).token;
+
+    const response = await request(app)
+      .post('/usuarios')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        nome: 'Novo Admin',
+        email: 'novo.admin@example.com',
+        senha: 'senha-segura',
+        tipo: 'administrador'
+      });
+
+    expect(response.status).toBe(201);
   });
 
   it('deve negar paciente em rota administrativa', async () => {
