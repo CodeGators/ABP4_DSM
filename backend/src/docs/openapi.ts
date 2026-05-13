@@ -27,12 +27,17 @@ export const openApiDocument = {
     {
       name: 'Usuarios',
       description:
-        'Cadastro de pessoas que usam o sistema: paciente, responsavel ou administrador. Login e senha entram na tarefa futura de autenticacao.'
+        'Cadastro de pessoas que usam o sistema: paciente, responsavel ou administrador. Usuarios podem ter senha para login via autenticacao.'
     },
     {
       name: 'Pacientes',
       description:
         'Cadastro do paciente e vinculo com um ou mais responsaveis que poderao acompanhar historico e receber notificacoes.'
+    },
+    {
+      name: 'Dispositivos',
+      description:
+        'Cadastro do dispositivo PillGator e dos compartimentos onde os medicamentos ficam organizados.'
     },
     {
       name: 'Medicamentos',
@@ -468,6 +473,253 @@ export const openApiDocument = {
         ],
         responses: {
           '204': { description: 'Vinculo removido sem corpo de resposta' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/dispositivos': {
+      get: {
+        tags: ['Dispositivos'],
+        summary: 'Lista dispositivos ativos',
+        description:
+          'Retorna os dispositivos cadastrados. Use `pacienteId` para listar apenas os dispositivos de um paciente.',
+        parameters: [
+          {
+            name: 'pacienteId',
+            in: 'query',
+            required: false,
+            description: 'Opcional. UUID do paciente dono do dispositivo.',
+            schema: { type: 'string', format: 'uuid' },
+            example: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444'
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Lista de dispositivos',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Dispositivo' }
+                }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' }
+        }
+      },
+      post: {
+        tags: ['Dispositivos'],
+        summary: 'Cadastra um dispositivo',
+        description:
+          'Cria o cadastro do dispositivo fisico do paciente. O firmware IoT sera feito por outro grupo, mas este cadastro prepara o backend para integracao.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CriarDispositivo' },
+              example: {
+                pacienteId: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444',
+                nome: 'PillGator Quarto',
+                identificador: 'pillgator-01',
+                modelo: 'Prototipo DSM'
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Dispositivo criado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Dispositivo' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/dispositivos/{id}': {
+      get: {
+        tags: ['Dispositivos'],
+        summary: 'Busca um dispositivo pelo id',
+        parameters: [{ $ref: '#/components/parameters/DispositivoId' }],
+        responses: {
+          '200': {
+            description: 'Dispositivo encontrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Dispositivo' }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      },
+      put: {
+        tags: ['Dispositivos'],
+        summary: 'Atualiza um dispositivo',
+        description:
+          'Atualiza dados do dispositivo. Envie apenas os campos que deseja alterar.',
+        parameters: [{ $ref: '#/components/parameters/DispositivoId' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/AtualizarDispositivo' },
+              example: {
+                nome: 'PillGator Sala',
+                modelo: 'Prototipo DSM v2',
+                ativo: true
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Dispositivo atualizado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Dispositivo' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      },
+      delete: {
+        tags: ['Dispositivos'],
+        summary: 'Remove um dispositivo',
+        description:
+          'Faz remocao logica do dispositivo, alterando `ativo` para false.',
+        parameters: [{ $ref: '#/components/parameters/DispositivoId' }],
+        responses: {
+          '204': { description: 'Dispositivo removido sem corpo de resposta' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      }
+    },
+    '/dispositivos/{dispositivoId}/compartimentos': {
+      get: {
+        tags: ['Dispositivos'],
+        summary: 'Lista compartimentos do dispositivo',
+        description:
+          'Mostra os compartimentos ativos do dispositivo e qual medicamento esta associado a cada um.',
+        parameters: [{ $ref: '#/components/parameters/DispositivoIdNaRota' }],
+        responses: {
+          '200': {
+            description: 'Lista de compartimentos',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Compartimento' }
+                }
+              }
+            }
+          },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
+        }
+      },
+      post: {
+        tags: ['Dispositivos'],
+        summary: 'Cadastra um compartimento',
+        description:
+          'Cria um compartimento dentro de um dispositivo. O campo `numero` deve ser unico dentro do mesmo dispositivo.',
+        parameters: [{ $ref: '#/components/parameters/DispositivoIdNaRota' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CriarCompartimento' },
+              examples: {
+                comMedicamento: {
+                  summary: 'Compartimento com medicamento',
+                  value: {
+                    numero: 1,
+                    medicamentoId: '7b8d7b2a-0d8d-4f87-8a3f-9e5a3f2c1111',
+                    status: 'bloqueado',
+                    observacoes: 'Uso pela manha.'
+                  }
+                },
+                vazio: {
+                  summary: 'Compartimento vazio',
+                  value: {
+                    numero: 2,
+                    status: 'bloqueado'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Compartimento criado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Compartimento' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/dispositivos/{dispositivoId}/compartimentos/{compartimentoId}': {
+      put: {
+        tags: ['Dispositivos'],
+        summary: 'Atualiza um compartimento',
+        description:
+          'Atualiza status, medicamento associado, numero ou observacoes do compartimento.',
+        parameters: [
+          { $ref: '#/components/parameters/DispositivoIdNaRota' },
+          { $ref: '#/components/parameters/CompartimentoId' }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/AtualizarCompartimento' },
+              example: {
+                status: 'liberado',
+                medicamentoId: '7b8d7b2a-0d8d-4f87-8a3f-9e5a3f2c1111'
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Compartimento atualizado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Compartimento' }
+              }
+            }
+          },
+          '400': { $ref: '#/components/responses/ErroValidacao' },
+          '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
+          '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      },
+      delete: {
+        tags: ['Dispositivos'],
+        summary: 'Remove um compartimento',
+        description:
+          'Faz remocao logica do compartimento, alterando `ativo` para false.',
+        parameters: [
+          { $ref: '#/components/parameters/DispositivoIdNaRota' },
+          { $ref: '#/components/parameters/CompartimentoId' }
+        ],
+        responses: {
+          '204': { description: 'Compartimento removido sem corpo de resposta' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -1004,6 +1256,30 @@ export const openApiDocument = {
         schema: { type: 'string', format: 'uuid' },
         example: '4a0c9282-5fa8-4bb7-a03a-60d9c8a45555'
       },
+      DispositivoId: {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'UUID do dispositivo.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '5d9c345f-41b6-4e6d-a4b7-d95fdb236666'
+      },
+      DispositivoIdNaRota: {
+        name: 'dispositivoId',
+        in: 'path',
+        required: true,
+        description: 'UUID do dispositivo.',
+        schema: { type: 'string', format: 'uuid' },
+        example: '5d9c345f-41b6-4e6d-a4b7-d95fdb236666'
+      },
+      CompartimentoId: {
+        name: 'compartimentoId',
+        in: 'path',
+        required: true,
+        description: 'UUID do compartimento.',
+        schema: { type: 'string', format: 'uuid' },
+        example: 'a807792e-24cf-4946-bf99-29ee6fa27777'
+      },
       MedicamentoId: {
         name: 'id',
         in: 'path',
@@ -1426,6 +1702,229 @@ export const openApiDocument = {
             default: true,
             description:
               'Opcional. Use true para este responsavel receber alertas desse paciente.'
+          }
+        }
+      },
+      Dispositivo: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico do dispositivo.'
+          },
+          pacienteId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Paciente dono do dispositivo.'
+          },
+          nome: {
+            type: 'string',
+            description: 'Nome amigavel para aparecer no app.',
+            example: 'PillGator Quarto'
+          },
+          identificador: {
+            type: 'string',
+            description:
+              'Codigo unico usado para reconhecer o dispositivo na integracao futura.',
+            example: 'pillgator-01'
+          },
+          modelo: {
+            type: 'string',
+            nullable: true,
+            description: 'Modelo, versao ou observacao tecnica do dispositivo.'
+          },
+          ultimoSinalEm: {
+            type: 'string',
+            nullable: true,
+            format: 'date-time',
+            description:
+              'Ultima data/hora em que o dispositivo deu sinal. Sera usado melhor na tarefa de sincronizacao.'
+          },
+          ativo: { type: 'boolean' },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      CriarDispositivo: {
+        type: 'object',
+        required: ['pacienteId', 'nome', 'identificador'],
+        properties: {
+          pacienteId: {
+            type: 'string',
+            format: 'uuid',
+            description:
+              'Obrigatorio. UUID de um paciente ativo.'
+          },
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description:
+              'Obrigatorio. Nome amigavel do dispositivo, como PillGator Quarto.'
+          },
+          identificador: {
+            type: 'string',
+            maxLength: 120,
+            description:
+              'Obrigatorio. Codigo unico do dispositivo, como pillgator-01.'
+          },
+          modelo: {
+            type: 'string',
+            nullable: true,
+            maxLength: 120,
+            description: 'Opcional. Modelo ou versao do prototipo.'
+          },
+          ultimoSinalEm: {
+            type: 'string',
+            nullable: true,
+            format: 'date-time',
+            description:
+              'Opcional. Data/hora ISO 8601 do ultimo sinal recebido.'
+          }
+        }
+      },
+      AtualizarDispositivo: {
+        type: 'object',
+        properties: {
+          pacienteId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Opcional. Troca o paciente vinculado ao dispositivo.'
+          },
+          nome: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Opcional. Novo nome do dispositivo.'
+          },
+          identificador: {
+            type: 'string',
+            maxLength: 120,
+            description: 'Opcional. Novo identificador unico.'
+          },
+          modelo: {
+            type: 'string',
+            nullable: true,
+            maxLength: 120,
+            description: 'Opcional. Novo modelo ou versao.'
+          },
+          ultimoSinalEm: {
+            type: 'string',
+            nullable: true,
+            format: 'date-time',
+            description: 'Opcional. Atualiza ultimo sinal recebido.'
+          },
+          ativo: {
+            type: 'boolean',
+            description: 'Use false para desativar ou true para reativar.'
+          }
+        }
+      },
+      Compartimento: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Identificador unico do compartimento.'
+          },
+          dispositivoId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Dispositivo ao qual o compartimento pertence.'
+          },
+          numero: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 99,
+            description:
+              'Numero fisico/logico do compartimento dentro do dispositivo.'
+          },
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Medicamento associado ao compartimento. Pode ser null se estiver vazio.'
+          },
+          status: {
+            type: 'string',
+            enum: ['bloqueado', 'liberado', 'aberto', 'erro'],
+            description:
+              'Estado atual do compartimento para app/backend/IoT.'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            description: 'Observacoes simples sobre uso ou posicao.'
+          },
+          ativo: { type: 'boolean' },
+          criadoEm: { type: 'string', format: 'date-time' },
+          atualizadoEm: { type: 'string', format: 'date-time' }
+        }
+      },
+      CriarCompartimento: {
+        type: 'object',
+        required: ['numero'],
+        properties: {
+          numero: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 99,
+            description:
+              'Obrigatorio. Numero unico dentro do dispositivo.'
+          },
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. UUID de um medicamento ativo para associar ao compartimento.'
+          },
+          status: {
+            type: 'string',
+            enum: ['bloqueado', 'liberado', 'aberto', 'erro'],
+            default: 'bloqueado',
+            description:
+              'Opcional. Se nao enviar, o backend usa bloqueado.'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            maxLength: 1000,
+            description: 'Opcional. Observacoes sobre o compartimento.'
+          }
+        }
+      },
+      AtualizarCompartimento: {
+        type: 'object',
+        properties: {
+          numero: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 99,
+            description: 'Opcional. Novo numero do compartimento.'
+          },
+          medicamentoId: {
+            type: 'string',
+            nullable: true,
+            format: 'uuid',
+            description:
+              'Opcional. Novo medicamento ou null para deixar vazio.'
+          },
+          status: {
+            type: 'string',
+            enum: ['bloqueado', 'liberado', 'aberto', 'erro'],
+            description: 'Opcional. Novo status do compartimento.'
+          },
+          observacoes: {
+            type: 'string',
+            nullable: true,
+            maxLength: 1000,
+            description: 'Opcional. Novas observacoes.'
+          },
+          ativo: {
+            type: 'boolean',
+            description: 'Use false para desativar ou true para reativar.'
           }
         }
       },
