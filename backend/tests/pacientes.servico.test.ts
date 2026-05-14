@@ -39,6 +39,13 @@ class RepositorioPacientesMemoria {
         return false;
       }
 
+      if (
+        opcoes.where.usuarioId !== undefined &&
+        paciente.usuarioId !== opcoes.where.usuarioId
+      ) {
+        return false;
+      }
+
       return true;
     });
   }
@@ -135,6 +142,13 @@ class RepositorioPacientesResponsaveisMemoria {
         return false;
       }
 
+      if (
+        opcoes.where.responsavelId !== undefined &&
+        vinculo.responsavelId !== opcoes.where.responsavelId
+      ) {
+        return false;
+      }
+
       if (opcoes.where.ativo !== undefined && vinculo.ativo !== opcoes.where.ativo) {
         return false;
       }
@@ -174,12 +188,12 @@ class RepositorioPacientesResponsaveisMemoria {
 
 function criarUsuario(sobrescritas: Partial<Usuario> = {}): Usuario {
   return Object.assign(new Usuario(), {
-    id: 'usuario-paciente-1',
-    nome: 'Joao Paciente',
-    email: 'joao@example.com',
+    id: 'responsavel-1',
+    nome: 'Maria Responsavel',
+    email: 'maria@example.com',
     telefone: null,
-    tipo: 'paciente',
-    recebeNotificacoes: false,
+    tipo: 'responsavel',
+    recebeNotificacoes: true,
     ativo: true,
     criadoEm: dataFixa,
     atualizadoEm: dataFixa,
@@ -196,11 +210,11 @@ function criarServico() {
   usuariosRepositorio.usuarios.push(
     criarUsuario(),
     criarUsuario({
-      id: 'responsavel-1',
-      nome: 'Maria Responsavel',
-      email: 'maria@example.com',
-      tipo: 'responsavel',
-      recebeNotificacoes: true
+      id: 'admin-1',
+      nome: 'Admin',
+      email: 'admin@example.com',
+      tipo: 'administrador',
+      recebeNotificacoes: false
     })
   );
 
@@ -219,18 +233,17 @@ function criarServico() {
 }
 
 describe('PacientesServico', () => {
-  it('deve criar paciente vinculado a usuario paciente', async () => {
+  it('deve criar paciente sem usuario proprio', async () => {
     const { servico } = criarServico();
 
     const paciente = await servico.criar({
-      usuarioId: 'usuario-paciente-1',
       nome: ' Joao Paciente ',
       dataNascimento: '1950-01-01',
       observacoes: ' Usa lembrete sonoro. '
     });
 
     expect(paciente).toMatchObject({
-      usuarioId: 'usuario-paciente-1',
+      usuarioId: null,
       nome: 'Joao Paciente',
       dataNascimento: '1950-01-01',
       observacoes: 'Usa lembrete sonoro.',
@@ -238,7 +251,81 @@ describe('PacientesServico', () => {
     });
   });
 
-  it('deve rejeitar usuario que nao seja paciente', async () => {
+  it('deve criar paciente usando dados do proprio responsavel logado', async () => {
+    const { pacientesResponsaveisRepositorio, servico } = criarServico();
+
+    const paciente = await servico.criar(
+      {
+        souEuMesmo: true,
+        dataNascimento: '1990-05-20'
+      },
+      { id: 'responsavel-1', tipo: 'responsavel' }
+    );
+
+    expect(paciente).toMatchObject({
+      usuarioId: 'responsavel-1',
+      nome: 'Maria Responsavel',
+      dataNascimento: '1990-05-20'
+    });
+    expect(pacientesResponsaveisRepositorio.vinculos[0]).toMatchObject({
+      pacienteId: paciente.id,
+      responsavelId: 'responsavel-1'
+    });
+  });
+
+  it('deve vincular automaticamente paciente criado por responsavel logado', async () => {
+    const { pacientesResponsaveisRepositorio, servico } = criarServico();
+
+    const paciente = await servico.criar(
+      {
+        nome: 'Filho Paciente',
+        dataNascimento: '2018-03-10'
+      },
+      { id: 'responsavel-1', tipo: 'responsavel' }
+    );
+
+    expect(pacientesResponsaveisRepositorio.vinculos).toHaveLength(1);
+    expect(pacientesResponsaveisRepositorio.vinculos[0]).toMatchObject({
+      pacienteId: paciente.id,
+      responsavelId: 'responsavel-1',
+      recebeNotificacoes: true,
+      ativo: true
+    });
+  });
+
+  it('deve listar apenas pacientes vinculados ao responsavel', async () => {
+    const { servico } = criarServico();
+    const pacienteVinculado = await servico.criar({ nome: 'Filho Paciente' });
+    await servico.criar({ nome: 'Paciente de Outro Responsavel' });
+    await servico.vincularResponsavel(pacienteVinculado.id, {
+      responsavelId: 'responsavel-1'
+    });
+
+    const pacientes = await servico.listarMeus({
+      id: 'responsavel-1',
+      tipo: 'responsavel'
+    });
+
+    expect(pacientes).toHaveLength(1);
+    expect(pacientes[0]?.id).toBe(pacienteVinculado.id);
+  });
+
+  it('deve bloquear responsavel sem vinculo ao buscar paciente', async () => {
+    const { servico } = criarServico();
+    const paciente = await servico.criar({ nome: 'Paciente Sem Vinculo' });
+
+    await expect(
+      servico.buscarPorId(paciente.id, {
+        id: 'responsavel-1',
+        tipo: 'responsavel'
+      })
+    ).rejects.toMatchObject<Partial<ErroHttp>>({
+      statusCode: 403,
+      message: 'Usuario sem permissao para acessar este paciente'
+    });
+  });
+
+  it('deve rejeitar usuarioId manual no cadastro de paciente', async () => {
     const { servico } = criarServico();
 
     await expect(
@@ -247,24 +334,29 @@ describe('PacientesServico', () => {
         nome: 'Paciente Invalido'
       })
     ).rejects.toMatchObject<Partial<ErroHttp>>({
-      statusCode: 404,
-      message: 'Usuario paciente nao encontrado'
+      statusCode: 400,
+      message:
+        'Campo usuarioId nao deve ser enviado. Use souEuMesmo para cadastrar o responsavel logado como paciente.'
     });
   });
 
-  it('deve impedir que um usuario seja vinculado a dois pacientes', async () => {
+  it('deve impedir que um responsavel seja vinculado a dois pacientes proprios', async () => {
     const { servico } = criarServico();
 
-    await servico.criar({
-      usuarioId: 'usuario-paciente-1',
-      nome: 'Joao Paciente'
-    });
+    await servico.criar(
+      {
+        souEuMesmo: true
+      },
+      { id: 'responsavel-1', tipo: 'responsavel' }
+    );
 
     await expect(
-      servico.criar({
-        usuarioId: 'usuario-paciente-1',
-        nome: 'Outro Paciente'
-      })
+      servico.criar(
+        {
+          souEuMesmo: true
+        },
+        { id: 'responsavel-1', tipo: 'responsavel' }
+      )
     ).rejects.toMatchObject<Partial<ErroHttp>>({
       statusCode: 409,
       message: 'Usuario ja esta vinculado a outro paciente'
@@ -274,7 +366,6 @@ describe('PacientesServico', () => {
   it('deve vincular responsavel ao paciente', async () => {
     const { servico } = criarServico();
     const paciente = await servico.criar({
-      usuarioId: 'usuario-paciente-1',
       nome: 'Joao Paciente'
     });
 
@@ -296,7 +387,6 @@ describe('PacientesServico', () => {
   it('deve reativar vinculo existente com responsavel', async () => {
     const { servico } = criarServico();
     const paciente = await servico.criar({
-      usuarioId: 'usuario-paciente-1',
       nome: 'Joao Paciente'
     });
     await servico.vincularResponsavel(paciente.id, {
@@ -321,13 +411,12 @@ describe('PacientesServico', () => {
   it('deve rejeitar vinculo com usuario que nao seja responsavel', async () => {
     const { servico } = criarServico();
     const paciente = await servico.criar({
-      usuarioId: 'usuario-paciente-1',
       nome: 'Joao Paciente'
     });
 
     await expect(
       servico.vincularResponsavel(paciente.id, {
-        responsavelId: 'usuario-paciente-1'
+        responsavelId: 'admin-1'
       })
     ).rejects.toMatchObject<Partial<ErroHttp>>({
       statusCode: 404,
@@ -338,7 +427,6 @@ describe('PacientesServico', () => {
   it('deve listar apenas responsaveis ativos do paciente', async () => {
     const { servico } = criarServico();
     const paciente = await servico.criar({
-      usuarioId: 'usuario-paciente-1',
       nome: 'Joao Paciente'
     });
     await servico.vincularResponsavel(paciente.id, {

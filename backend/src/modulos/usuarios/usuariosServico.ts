@@ -13,6 +13,7 @@ import type {
 } from './usuariosTipos.js';
 
 const tiposUsuario: TipoUsuario[] = ['paciente', 'responsavel', 'administrador'];
+const tiposCadastroUsuario: TipoUsuario[] = ['responsavel', 'administrador'];
 const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class UsuariosServico implements UsuariosServicoContrato {
@@ -144,13 +145,13 @@ export class UsuariosServico implements UsuariosServicoContrato {
   }
 
   public validarTipo(valor: unknown): TipoUsuario {
-    if (typeof valor === 'string' && this.eTipoUsuario(valor)) {
+    if (typeof valor === 'string' && this.eTipoCadastroUsuario(valor)) {
       return valor;
     }
 
     throw new ErroHttp(
       400,
-      `Campo tipo deve ser um destes valores: ${tiposUsuario.join(', ')}`
+      `Campo tipo deve ser um destes valores: ${tiposCadastroUsuario.join(', ')}`
     );
   }
 
@@ -218,6 +219,10 @@ export class UsuariosServico implements UsuariosServicoContrato {
 
   private eTipoUsuario(valor: string): valor is TipoUsuario {
     return tiposUsuario.includes(valor as TipoUsuario);
+  }
+
+  private eTipoCadastroUsuario(valor: string): valor is TipoUsuario {
+    return this.eTipoUsuario(valor) && tiposCadastroUsuario.includes(valor);
   }
 }
 

@@ -27,7 +27,7 @@ export const openApiDocument = {
     {
       name: 'Usuarios',
       description:
-        'Cadastro de pessoas que usam o sistema: paciente, responsavel ou administrador. Usuarios podem ter senha para login via autenticacao.'
+        'Cadastro de contas que acessam o sistema: responsavel ou administrador. O cadastro de pacientes fica em Pacientes.'
     },
     {
       name: 'Pacientes',
@@ -107,7 +107,7 @@ export const openApiDocument = {
         security: [],
         summary: 'Realiza login',
         description:
-          'Envia email e senha de um usuario ativo. Se estiver correto, retorna um token JWT. Para testar as outras rotas no Swagger, copie o valor de `token`, clique em Authorize e cole no campo de autorizacao.',
+          'Envia email e senha de um usuario ativo. Se estiver correto, o Swagger mostra uma resposta com o campo `token`. Copie somente o valor desse campo, clique em Authorize no topo da pagina e cole no campo de autorizacao. Depois disso, as rotas protegidas poderao ser testadas.',
         requestBody: {
           required: true,
           description:
@@ -124,10 +124,23 @@ export const openApiDocument = {
         },
         responses: {
           '200': {
-            description: 'Login realizado com sucesso',
+            description:
+              'Login realizado com sucesso. Copie o valor de `token` mostrado na resposta e cole no Authorize do Swagger.',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/LoginResposta' }
+                schema: { $ref: '#/components/schemas/LoginResposta' },
+                example: {
+                  token:
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo_de_token_jwt.assinatura',
+                  tipoToken: 'Bearer',
+                  expiraEm: '8h',
+                  usuario: {
+                    id: '9b8f2c60-1f6f-4f23-9f5a-9bb2b1110001',
+                    nome: 'Maria Responsavel',
+                    email: 'maria@example.com',
+                    tipo: 'responsavel'
+                  }
+                }
               }
             }
           },
@@ -148,10 +161,10 @@ export const openApiDocument = {
             in: 'query',
             required: false,
             description:
-              'Opcional. Valores aceitos: paciente, responsavel ou administrador.',
+              'Opcional. Valores aceitos: responsavel ou administrador.',
             schema: {
               type: 'string',
-              enum: ['paciente', 'responsavel', 'administrador']
+              enum: ['responsavel', 'administrador']
             },
             example: 'responsavel'
           }
@@ -173,33 +186,38 @@ export const openApiDocument = {
       },
       post: {
         tags: ['Usuarios'],
-        summary: 'Cadastra um usuario',
+        security: [],
+        summary: 'Cadastra uma conta pelo app',
         description:
-          'Cria uma pessoa no sistema. Por enquanto esta rota nao cria senha; login e autenticacao entram na proxima tarefa de seguranca.',
+          'Rota publica para o fluxo inicial do app: baixar o app, clicar em criar conta e preencher os dados. Esta rota cadastra apenas contas de `responsavel` ou `administrador`. No cadastro publico use `responsavel`; `administrador` deve ser criado por outro administrador autenticado. O paciente deve ser cadastrado depois em `/pacientes`.',
         requestBody: {
           required: true,
           description:
-            '`nome`, `email` e `tipo` sao obrigatorios. `telefone` e `recebeNotificacoes` sao opcionais.',
+            '`nome`, `email` e `tipo` sao obrigatorios. `senha` e opcional para o cadastro, mas necessaria para login. `telefone` e `recebeNotificacoes` tambem sao opcionais. Use `responsavel` para quem vai acessar o app e cuidar de um paciente. Use `administrador` apenas em cadastro feito por administrador autenticado.',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarUsuario' },
               examples: {
                 responsavel: {
-                  summary: 'Responsavel que recebera notificacoes',
+                  summary: 'Responsavel com acesso ao sistema',
                   value: {
                     nome: 'Maria Responsavel',
                     email: 'maria@example.com',
                     telefone: '11999999999',
+                    senha: 'senha-segura',
                     tipo: 'responsavel',
                     recebeNotificacoes: true
                   }
                 },
-                paciente: {
-                  summary: 'Paciente com usuario proprio',
+                administrador: {
+                  summary: 'Administrador criado por outro admin',
                   value: {
-                    nome: 'Joao Paciente',
-                    email: 'joao@example.com',
-                    tipo: 'paciente'
+                    nome: 'Admin PillGator',
+                    email: 'admin@example.com',
+                    telefone: '11999999999',
+                    senha: 'senha-segura',
+                    tipo: 'administrador',
+                    recebeNotificacoes: false
                   }
                 }
               }
@@ -216,6 +234,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '409': { $ref: '#/components/responses/ErroConflito' }
         }
       }
@@ -289,7 +308,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Lista pacientes ativos',
         description:
-          'Retorna os pacientes ativos cadastrados. Cada paciente pode ter um usuario proprio, mas isso e opcional.',
+          'Retorna pacientes ativos. Administrador ve todos. Responsavel ve apenas pacientes vinculados a ele pela tabela de vinculos paciente-responsavel.',
         responses: {
           '200': {
             description: 'Lista de pacientes',
@@ -308,27 +327,27 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Cadastra um paciente',
         description:
-          'Cria o cadastro do paciente que recebera os medicamentos. `usuarioId` e opcional e so deve apontar para usuario do tipo paciente.',
+          'Cria o cadastro do paciente que recebera os medicamentos. Paciente nao e criado em /usuarios. Se quem criou for um usuario responsavel, o backend vincula automaticamente esse paciente ao responsavel logado. Quando o responsavel tambem for o paciente, envie `souEuMesmo: true`; o backend usa o nome do responsavel logado e vincula esse usuario ao cadastro de paciente.',
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/CriarPaciente' },
               examples: {
-                semUsuario: {
-                  summary: 'Paciente sem login proprio',
+                outroPaciente: {
+                  summary: 'Paciente acompanhado pelo responsavel',
                   value: {
                     nome: 'Joao Paciente',
                     dataNascimento: '1950-01-01',
                     observacoes: 'Prefere alertas sonoros.'
                   }
                 },
-                comUsuario: {
-                  summary: 'Paciente ligado a usuario',
+                proprioResponsavel: {
+                  summary: 'Responsavel tambem e o paciente',
                   value: {
-                    usuarioId: '0d4e6e5a-7c55-4f68-b0f7-65a8660d4444',
-                    nome: 'Joao Paciente',
-                    dataNascimento: '1950-01-01'
+                    souEuMesmo: true,
+                    dataNascimento: '1980-04-15',
+                    observacoes: 'Responsavel cuida dos proprios medicamentos.'
                   }
                 }
               }
@@ -345,8 +364,32 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
           '409': { $ref: '#/components/responses/ErroConflito' }
+        }
+      }
+    },
+    '/pacientes/meus': {
+      get: {
+        tags: ['Pacientes'],
+        summary: 'Lista meus pacientes',
+        description:
+          'Rota principal para o app do responsavel. Retorna somente os pacientes vinculados ao usuario logado. Exemplo: uma mae responsavel por tres filhos ve apenas esses tres pacientes. Administrador pode usar GET /pacientes para ver todos.',
+        responses: {
+          '200': {
+            description: 'Lista de pacientes vinculados ao usuario logado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Paciente' }
+                }
+              }
+            }
+          },
+          '401': { $ref: '#/components/responses/ErroNaoAutorizado' },
+          '403': { $ref: '#/components/responses/ErroPermissao' }
         }
       }
     },
@@ -354,6 +397,8 @@ export const openApiDocument = {
       get: {
         tags: ['Pacientes'],
         summary: 'Busca um paciente pelo id',
+        description:
+          'Administrador pode buscar qualquer paciente ativo. Responsavel so consegue buscar paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         responses: {
           '200': {
@@ -364,6 +409,7 @@ export const openApiDocument = {
               }
             }
           },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       },
@@ -371,7 +417,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Atualiza um paciente',
         description:
-          'Atualiza dados cadastrais do paciente. Envie apenas os campos que deseja alterar.',
+          'Atualiza dados cadastrais do paciente. Envie apenas os campos que deseja alterar. Responsavel so consegue atualizar paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         requestBody: {
           required: true,
@@ -395,6 +441,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' },
           '409': { $ref: '#/components/responses/ErroConflito' }
         }
@@ -403,10 +450,11 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Remove um paciente',
         description:
-          'Faz remocao logica do paciente, alterando `ativo` para false.',
+          'Faz remocao logica do paciente, alterando `ativo` para false. Responsavel so consegue remover paciente vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteId' }],
         responses: {
           '204': { description: 'Paciente removido sem corpo de resposta' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -416,7 +464,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Lista responsaveis de um paciente',
         description:
-          'Mostra quais usuarios do tipo responsavel estao vinculados ao paciente.',
+          'Mostra quais usuarios do tipo responsavel estao vinculados ao paciente. Responsavel so consegue consultar vinculos de paciente que tambem esteja vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
         responses: {
           '200': {
@@ -430,6 +478,7 @@ export const openApiDocument = {
               }
             }
           },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       },
@@ -437,7 +486,7 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Vincula responsavel ao paciente',
         description:
-          'Liga um usuario do tipo `responsavel` ao paciente. Esse vinculo prepara quem podera receber notificacoes no futuro.',
+          'Liga um usuario do tipo `responsavel` ao paciente. Esse vinculo define quais responsaveis podem acompanhar o paciente e receber notificacoes. Responsavel so consegue adicionar vinculo em paciente que ja esteja vinculado a ele.',
         parameters: [{ $ref: '#/components/parameters/PacienteIdNaRota' }],
         requestBody: {
           required: true,
@@ -462,6 +511,7 @@ export const openApiDocument = {
             }
           },
           '400': { $ref: '#/components/responses/ErroValidacao' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -471,13 +521,14 @@ export const openApiDocument = {
         tags: ['Pacientes'],
         summary: 'Remove responsavel do paciente',
         description:
-          'Remove logicamente o vinculo entre paciente e responsavel. O usuario responsavel nao e apagado.',
+          'Remove logicamente o vinculo entre paciente e responsavel. O usuario responsavel nao e apagado. Responsavel so consegue remover vinculo em paciente que ja esteja vinculado a ele.',
         parameters: [
           { $ref: '#/components/parameters/PacienteIdNaRota' },
           { $ref: '#/components/parameters/ResponsavelId' }
         ],
         responses: {
           '204': { description: 'Vinculo removido sem corpo de resposta' },
+          '403': { $ref: '#/components/responses/ErroPermissao' },
           '404': { $ref: '#/components/responses/ErroNaoEncontrado' }
         }
       }
@@ -1311,7 +1362,7 @@ export const openApiDocument = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         description:
-          'Use o token retornado em POST /auth/login. No Swagger, clique em Authorize e cole apenas o token, sem escrever Bearer antes.'
+          'Use o token retornado em POST /auth/login. No Swagger, clique em Authorize e cole apenas o valor do campo token, sem escrever Bearer antes.'
       }
     },
     parameters: {
@@ -1425,6 +1476,18 @@ export const openApiDocument = {
           }
         }
       },
+      ErroPermissao: {
+        description:
+          'Usuario autenticado sem permissao ou tentativa de fazer uma acao nao permitida no cadastro publico.',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Erro' },
+            example: {
+              mensagem: 'Cadastro publico nao pode criar usuario administrador'
+            }
+          }
+        }
+      },
       ErroConflito: {
         description:
           'Conflito com um registro existente, como email ja cadastrado ou usuario ja vinculado a outro paciente.',
@@ -1482,7 +1545,9 @@ export const openApiDocument = {
           token: {
             type: 'string',
             description:
-              'Token JWT. Copie este valor para o Authorize do Swagger ou envie no header Authorization como Bearer token.'
+              'Token JWT gerado pelo login. Copie este valor inteiro para o Authorize do Swagger ou envie no header Authorization como Bearer token.',
+            example:
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo_de_token_jwt.assinatura'
           },
           tipoToken: {
             type: 'string',
@@ -1501,7 +1566,7 @@ export const openApiDocument = {
               email: { type: 'string', format: 'email' },
               tipo: {
                 type: 'string',
-                enum: ['paciente', 'responsavel', 'administrador']
+                enum: ['responsavel', 'administrador']
               }
             }
           }
@@ -1524,7 +1589,7 @@ export const openApiDocument = {
             type: 'string',
             format: 'email',
             description:
-              'Email unico do usuario. Sera usado futuramente no login.',
+              'Email unico do usuario. Sera usado no login quando o usuario tiver senha cadastrada.',
             example: 'maria@example.com'
           },
           telefone: {
@@ -1535,9 +1600,9 @@ export const openApiDocument = {
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
+            enum: ['responsavel', 'administrador'],
             description:
-              'Papel do usuario dentro do sistema.'
+              'Papel da conta dentro do sistema. Pacientes sao cadastrados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',
@@ -1578,13 +1643,13 @@ export const openApiDocument = {
             format: 'password',
             minLength: 8,
             description:
-              'Opcional. Senha inicial do usuario. O backend salva apenas o hash, nunca a senha em texto.'
+              'Opcional para cadastrar. Necessaria para o usuario conseguir fazer login. O backend salva apenas o hash, nunca a senha em texto.'
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
+            enum: ['responsavel', 'administrador'],
             description:
-              'Obrigatorio. Use paciente para quem toma medicamentos, responsavel para cuidador/familiar e administrador para gestao.'
+              'Obrigatorio. Use responsavel para cuidador/familiar que acessa o app e administrador para gestao. Pacientes sao cadastrados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',
@@ -1623,8 +1688,9 @@ export const openApiDocument = {
           },
           tipo: {
             type: 'string',
-            enum: ['paciente', 'responsavel', 'administrador'],
-            description: 'Opcional. Novo papel do usuario.'
+            enum: ['responsavel', 'administrador'],
+            description:
+              'Opcional. Novo papel da conta. Pacientes sao alterados em /pacientes.'
           },
           recebeNotificacoes: {
             type: 'boolean',
@@ -1649,7 +1715,7 @@ export const openApiDocument = {
             nullable: true,
             format: 'uuid',
             description:
-              'Usuario do tipo paciente vinculado a este cadastro. Pode ser null.'
+              'Usuario responsavel vinculado quando o responsavel logado tambem e o paciente. Na maioria dos pacientes acompanhados por outra pessoa, fica null.'
           },
           nome: {
             type: 'string',
@@ -1675,19 +1741,12 @@ export const openApiDocument = {
       },
       CriarPaciente: {
         type: 'object',
-        required: ['nome'],
         properties: {
-          usuarioId: {
-            type: 'string',
-            nullable: true,
-            format: 'uuid',
-            description:
-              'Opcional. UUID de um usuario ativo do tipo paciente.'
-          },
           nome: {
             type: 'string',
             maxLength: 120,
-            description: 'Obrigatorio. Nome do paciente.',
+            description:
+              'Obrigatorio quando `souEuMesmo` nao for true. Nome do paciente acompanhado.',
             example: 'Joao Paciente'
           },
           dataNascimento: {
@@ -1702,19 +1761,18 @@ export const openApiDocument = {
             nullable: true,
             maxLength: 1000,
             description: 'Opcional. Observacoes gerais do cuidado.'
+          },
+          souEuMesmo: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Opcional. Use true quando o responsavel logado tambem for o paciente. Nesse caso nao envie nome nem usuarioId; o backend usa os dados do responsavel autenticado.'
           }
         }
       },
       AtualizarPaciente: {
         type: 'object',
         properties: {
-          usuarioId: {
-            type: 'string',
-            nullable: true,
-            format: 'uuid',
-            description:
-              'Opcional. Novo usuario do tipo paciente ou null para remover vinculo.'
-          },
           nome: {
             type: 'string',
             maxLength: 120,

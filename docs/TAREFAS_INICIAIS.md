@@ -171,6 +171,10 @@ Tarefas:
 - [x] Permitir um ou mais responsaveis por paciente.
 - [x] Criar CRUD minimo de usuarios/pacientes/responsaveis.
 - [x] Preparar modelo para responsaveis receberem notificacoes.
+- [x] Criar listagem de pacientes vinculados ao responsavel logado.
+- [x] Vincular automaticamente novo paciente ao responsavel que criou.
+- [x] Restringir acesso do responsavel apenas aos pacientes vinculados a ele.
+- [x] Simplificar cadastro: pacientes ficam em `/pacientes`, e responsavel pode usar `souEuMesmo` quando tambem for paciente.
 - [x] Criar testes.
 - [ ] Abrir PR para `develop`.
 

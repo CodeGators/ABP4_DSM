@@ -15,6 +15,7 @@ describe('Documentacao da API', () => {
     });
     expect(response.body.paths).toHaveProperty('/usuarios');
     expect(response.body.paths).toHaveProperty('/pacientes');
+    expect(response.body.paths).toHaveProperty('/pacientes/meus');
     expect(response.body.paths).toHaveProperty('/dispositivos');
     expect(response.body.paths).toHaveProperty('/notificacoes');
     expect(response.body.paths).toHaveProperty('/auth/login');

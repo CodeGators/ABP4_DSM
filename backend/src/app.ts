@@ -55,6 +55,13 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
   });
 
   app.use('/auth', criarAutenticacaoRotas(opcoes.autenticacaoServico));
+  app.use(
+    '/usuarios',
+    criarUsuariosRotas(opcoes.usuariosServico, {
+      incluirCadastroPublico: true,
+      incluirGestao: false
+    })
+  );
 
   if (autenticacaoAtiva) {
     app.use(autenticar);
@@ -78,7 +85,10 @@ export function criarApp(opcoes: CriarAppOpcoes = {}) {
   app.use(
     '/usuarios',
     protegerPorTipo('administrador'),
-    criarUsuariosRotas(opcoes.usuariosServico)
+    criarUsuariosRotas(opcoes.usuariosServico, {
+      incluirCadastroPublico: false,
+      incluirGestao: true
+    })
   );
   app.use(
     '/pacientes',

@@ -1,9 +1,12 @@
 import request from 'supertest';
+import type { Repository } from 'typeorm';
 
 import { criarApp } from '../src/app.js';
 import type { Paciente } from '../src/entidades/Paciente.js';
 import type { PacienteResponsavel } from '../src/entidades/PacienteResponsavel.js';
+import { Usuario } from '../src/entidades/Usuario.js';
 import { ErroHttp } from '../src/erros/ErroHttp.js';
+import { AutenticacaoServico } from '../src/modulos/autenticacao/autenticacaoServico.js';
 import type { PacientesServicoContrato } from '../src/modulos/pacientes/pacientesTipos.js';
 
 const dataFixa = new Date('2026-01-01T00:00:00.000Z');
@@ -41,87 +44,121 @@ function criarVinculoTeste(
   };
 }
 
+function criarUsuarioAutenticado(tipo: Usuario['tipo']): Usuario {
+  return Object.assign(new Usuario(), {
+    id: `usuario-${tipo}`,
+    nome: `Usuario ${tipo}`,
+    email: `${tipo}@example.com`,
+    telefone: null,
+    senhaHash: 'hash',
+    tipo,
+    recebeNotificacoes: true,
+    ativo: true,
+    criadoEm: dataFixa,
+    atualizadoEm: dataFixa
+  });
+}
+
+function gerarToken(usuario: Usuario): string {
+  return new AutenticacaoServico({} as Repository<Usuario>).gerarToken(usuario)
+    .token;
+}
+
 function criarServicoMock(sobrescritas: Partial<PacientesServicoContrato> = {}) {
   const paciente = criarPacienteTeste();
   const vinculo = criarVinculoTeste();
   const chamadas = {
-    listar: 0,
-    buscarPorId: [] as string[],
-    criar: [] as unknown[],
-    atualizar: [] as Array<[string, unknown]>,
-    remover: [] as string[],
-    listarResponsaveis: [] as string[],
-    vincularResponsavel: [] as Array<[string, unknown]>,
-    removerResponsavel: [] as Array<[string, string]>
+    listar: [] as unknown[],
+    listarMeus: [] as unknown[],
+    buscarPorId: [] as Array<[string, unknown]>,
+    criar: [] as Array<[unknown, unknown]>,
+    atualizar: [] as Array<[string, unknown, unknown]>,
+    remover: [] as Array<[string, unknown]>,
+    listarResponsaveis: [] as Array<[string, unknown]>,
+    vincularResponsavel: [] as Array<[string, unknown, unknown]>,
+    removerResponsavel: [] as Array<[string, string, unknown]>
   };
 
   const servico: PacientesServicoContrato = {
-    listar: async () => {
-      chamadas.listar += 1;
+    listar: async (contexto) => {
+      chamadas.listar.push(contexto);
 
       if (sobrescritas.listar) {
-        return sobrescritas.listar();
+        return sobrescritas.listar(contexto);
       }
 
       return [paciente];
     },
-    buscarPorId: async (id) => {
-      chamadas.buscarPorId.push(id);
+    listarMeus: async (contexto) => {
+      chamadas.listarMeus.push(contexto);
+
+      if (sobrescritas.listarMeus) {
+        return sobrescritas.listarMeus(contexto);
+      }
+
+      return [paciente];
+    },
+    buscarPorId: async (id, contexto) => {
+      chamadas.buscarPorId.push([id, contexto]);
 
       if (sobrescritas.buscarPorId) {
-        return sobrescritas.buscarPorId(id);
+        return sobrescritas.buscarPorId(id, contexto);
       }
 
       return paciente;
     },
-    criar: async (entrada) => {
-      chamadas.criar.push(entrada);
+    criar: async (entrada, contexto) => {
+      chamadas.criar.push([entrada, contexto]);
 
       if (sobrescritas.criar) {
-        return sobrescritas.criar(entrada);
+        return sobrescritas.criar(entrada, contexto);
       }
 
       return paciente;
     },
-    atualizar: async (id, entrada) => {
-      chamadas.atualizar.push([id, entrada]);
+    atualizar: async (id, entrada, contexto) => {
+      chamadas.atualizar.push([id, entrada, contexto]);
 
       if (sobrescritas.atualizar) {
-        return sobrescritas.atualizar(id, entrada);
+        return sobrescritas.atualizar(id, entrada, contexto);
       }
 
       return paciente;
     },
-    remover: async (id) => {
-      chamadas.remover.push(id);
+    remover: async (id, contexto) => {
+      chamadas.remover.push([id, contexto]);
 
       if (sobrescritas.remover) {
-        return sobrescritas.remover(id);
+        return sobrescritas.remover(id, contexto);
       }
     },
-    listarResponsaveis: async (pacienteId) => {
-      chamadas.listarResponsaveis.push(pacienteId);
+    listarResponsaveis: async (pacienteId, contexto) => {
+      chamadas.listarResponsaveis.push([pacienteId, contexto]);
 
       if (sobrescritas.listarResponsaveis) {
-        return sobrescritas.listarResponsaveis(pacienteId);
+        return sobrescritas.listarResponsaveis(pacienteId, contexto);
       }
 
       return [vinculo];
     },
-    vincularResponsavel: async (pacienteId, entrada) => {
-      chamadas.vincularResponsavel.push([pacienteId, entrada]);
+    vincularResponsavel: async (pacienteId, entrada, contexto) => {
+      chamadas.vincularResponsavel.push([pacienteId, entrada, contexto]);
 
       if (sobrescritas.vincularResponsavel) {
-        return sobrescritas.vincularResponsavel(pacienteId, entrada);
+        return sobrescritas.vincularResponsavel(pacienteId, entrada, contexto);
       }
 
       return vinculo;
     },
-    removerResponsavel: async (pacienteId, responsavelId) => {
-      chamadas.removerResponsavel.push([pacienteId, responsavelId]);
+    removerResponsavel: async (pacienteId, responsavelId, contexto) => {
+      chamadas.removerResponsavel.push([pacienteId, responsavelId, contexto]);
 
       if (sobrescritas.removerResponsavel) {
-        return sobrescritas.removerResponsavel(pacienteId, responsavelId);
+        return sobrescritas.removerResponsavel(
+          pacienteId,
+          responsavelId,
+          contexto
+        );
       }
     }
   };
@@ -137,11 +174,26 @@ describe('Rotas de pacientes', () => {
     const response = await request(app).get('/pacientes');
 
     expect(response.status).toBe(200);
-    expect(chamadas.listar).toBe(1);
+    expect(chamadas.listar).toEqual([undefined]);
     expect(response.body[0]).toMatchObject({
       id: 'paciente-1',
       nome: 'Joao Paciente'
     });
+  });
+
+  it('deve listar meus pacientes usando responsavel autenticado', async () => {
+    const { servico, chamadas } = criarServicoMock();
+    const usuario = criarUsuarioAutenticado('responsavel');
+    const app = criarApp({ pacientesServico: servico });
+
+    const response = await request(app)
+      .get('/pacientes/meus')
+      .set('Authorization', `Bearer ${gerarToken(usuario)}`);
+
+    expect(response.status).toBe(200);
+    expect(chamadas.listarMeus).toEqual([
+      { id: 'usuario-responsavel', tipo: 'responsavel' }
+    ]);
   });
 
   it('deve criar paciente', async () => {
@@ -155,7 +207,27 @@ describe('Rotas de pacientes', () => {
     const response = await request(app).post('/pacientes').send(entrada);
 
     expect(response.status).toBe(201);
-    expect(chamadas.criar).toEqual([entrada]);
+    expect(chamadas.criar).toEqual([[entrada, undefined]]);
+  });
+
+  it('deve criar paciente com contexto do responsavel logado', async () => {
+    const { servico, chamadas } = criarServicoMock();
+    const usuario = criarUsuarioAutenticado('responsavel');
+    const app = criarApp({ pacientesServico: servico });
+    const entrada = {
+      nome: 'Joao Paciente',
+      dataNascimento: '1950-01-01'
+    };
+
+    const response = await request(app)
+      .post('/pacientes')
+      .set('Authorization', `Bearer ${gerarToken(usuario)}`)
+      .send(entrada);
+
+    expect(response.status).toBe(201);
+    expect(chamadas.criar).toEqual([
+      [entrada, { id: 'usuario-responsavel', tipo: 'responsavel' }]
+    ]);
   });
 
   it('deve vincular responsavel ao paciente', async () => {
@@ -172,7 +244,9 @@ describe('Rotas de pacientes', () => {
       .send(entrada);
 
     expect(response.status).toBe(201);
-    expect(chamadas.vincularResponsavel).toEqual([['paciente-1', entrada]]);
+    expect(chamadas.vincularResponsavel).toEqual([
+      ['paciente-1', entrada, undefined]
+    ]);
   });
 
   it('deve listar responsaveis do paciente', async () => {
@@ -182,7 +256,7 @@ describe('Rotas de pacientes', () => {
     const response = await request(app).get('/pacientes/paciente-1/responsaveis');
 
     expect(response.status).toBe(200);
-    expect(chamadas.listarResponsaveis).toEqual(['paciente-1']);
+    expect(chamadas.listarResponsaveis).toEqual([['paciente-1', undefined]]);
     expect(response.body[0]).toMatchObject({
       pacienteId: 'paciente-1',
       responsavelId: 'responsavel-1'
@@ -199,7 +273,7 @@ describe('Rotas de pacientes', () => {
 
     expect(response.status).toBe(204);
     expect(chamadas.removerResponsavel).toEqual([
-      ['paciente-1', 'responsavel-1']
+      ['paciente-1', 'responsavel-1', undefined]
     ]);
   });
 
